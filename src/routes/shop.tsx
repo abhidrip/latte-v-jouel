@@ -4,6 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { LiquidGlassCard } from "../components/ui/liquid-glass-card";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
+import { DiscountBanner } from "../components/ui/DiscountBanner";
+import { Heart } from "lucide-react";
 const logoAsset = { url: "/lattev_transparent.png" };
 
 const CATEGORIES = ["all", "rings", "cuffs", "bangles", "bracelets", "pendants"] as const;
@@ -70,6 +73,7 @@ function ShopPage() {
   const { category } = Route.useSearch() as ShopSearch;
   const sectionRef = useRef<HTMLDivElement>(null);
   const { addItem, count } = useCart();
+  const { count: wishlistCount } = useWishlist();
 
   const { data: allProducts = [] } = useQuery({
     queryKey: ['products'],
@@ -87,14 +91,14 @@ function ShopPage() {
   const filtered = useMemo(() => {
     const filter = (list: Product[]) =>
       category === "all" ? list : list.filter((p) => p.category === category);
-    return { 
-      photo: filter(allProducts.filter(p => p.has_image)), 
-      archive: filter(allProducts.filter(p => !p.has_image)) 
+    return {
+      photo: filter(allProducts.filter(p => p.has_image)),
+      archive: filter(allProducts.filter(p => !p.has_image))
     };
   }, [category, allProducts]);
 
   useEffect(() => {
-    let cleanup = () => {};
+    let cleanup = () => { };
     (async () => {
       const [{ default: gsap }, { ScrollTrigger }] = await Promise.all([
         import("gsap"),
@@ -116,7 +120,10 @@ function ShopPage() {
   return (
     <div ref={sectionRef} style={{ background: "#E8B98A", color: "var(--foreground)", minHeight: "100vh" }}>
       {/* Nav */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "1.4rem 2rem", background: "rgba(232,185,138,0.82)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(201,169,110,0.3)" }}>
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, background: "rgba(232,185,138,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(201,169,110,0.3)" }}>
+        {/* Banner sits at the very top of the fixed nav — avoids overlap */}
+        <DiscountBanner />
+        <div style={{ padding: "1.2rem 2rem" }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto gap-4">
           <Link to="/" className="tracking-luxe uppercase hover:text-[var(--color-gold)] transition-colors font-medium">← Maison</Link>
           <div className="hidden md:flex items-center gap-8 tracking-luxe uppercase font-medium">
@@ -139,6 +146,11 @@ function ShopPage() {
               </div>
             </div>
             <a href="https://instagram.com/lattevjouel" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">@lattevjouel</a>
+            {/* Wishlist icon */}
+            <Link to="/wishlist" className="cart-nav-link" aria-label={`Wishlist (${wishlistCount})`} style={{ position: "relative" }}>
+              <Heart size={17} strokeWidth={1.5} fill={wishlistCount > 0 ? "var(--color-gold)" : "none"} stroke="currentColor" style={{ display: "block" }} />
+              {wishlistCount > 0 && <span className="cart-badge">{wishlistCount}</span>}
+            </Link>
             {/* Cart icon */}
             <Link to="/cart" className="cart-nav-link" aria-label={`Cart (${count} item${count !== 1 ? 's' : ''})`}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ display: "block" }}>
@@ -153,10 +165,11 @@ function ShopPage() {
             <img src={logoAsset.url} alt="Lattév Jouel" style={{ height: "clamp(44px, 4vw, 64px)", width: "auto", display: "block" }} />
           </Link>
         </div>
+        </div>
       </nav>
 
       {/* Header */}
-      <header style={{ paddingTop: "10rem", paddingBottom: "4rem", textAlign: "center", padding: "10rem 1.5rem 3rem", background: "#ffffff" }}>
+      <header style={{ textAlign: "center", padding: "10rem 1.5rem 4rem", background: "#ffffff" }}>
         <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>The Edit</div>
         <h1 className="font-display mt-4" style={{ fontWeight: 300, fontSize: "clamp(2.8rem, 7vw, 6rem)", lineHeight: 1 }}>
           {category === "all" ? <>The <span className="gold-shine">Collection</span></> : <span className="gold-shine">{CATEGORY_LABEL[category]}</span>}
@@ -191,7 +204,7 @@ function ShopPage() {
           ) : (
             <>
               {filtered.photo.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7 md:gap-10">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-7 lg:gap-10">
                   {filtered.photo.map((p) => (
                     <LiquidGlassCard
                       key={p.name}
@@ -209,11 +222,11 @@ function ShopPage() {
                     <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", opacity: 0.8, fontSize: "0.75rem" }}>
                       Coming to the Archive
                     </div>
-                    <p className="mt-3 uppercase tracking-luxe" style={{ color: "var(--color-ivory)", opacity: 0.5, fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem" }}>
+                    <p className="mt-3 uppercase tracking-luxe" style={{ color: "var(--color-umber)", opacity: 0.5, fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem" }}>
                       Photographed soon — DM to enquire.
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7 md:gap-10">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-7 lg:gap-10">
                     {filtered.archive.map((p) => (
                       <LiquidGlassCard
                         key={p.name}
@@ -230,10 +243,16 @@ function ShopPage() {
         </div>
       </section>
 
-      <footer style={{ background: "#E8B98A", color: "var(--color-ivory)", padding: "4rem 1.5rem 2rem", borderTop: "1px solid rgba(201,169,110,0.2)", textAlign: "center" }}>
+      <footer style={{ background: "#E8B98A", color: "var(--color-umber)", padding: "4rem 1.5rem 2rem", borderTop: "1px solid rgba(201,169,110,0.2)", textAlign: "center" }}>
         <img src={logoAsset.url} alt="Lattév Jouel" style={{ height: 84, width: "auto", margin: "0 auto", display: "block" }} />
         <p className="mt-4 text-sm opacity-70">DM <a className="underline" href="https://instagram.com/lattevjouel" target="_blank" rel="noopener noreferrer">@lattevjouel</a> to order</p>
-        <div className="mt-10 text-[0.65rem] tracking-wider-luxe uppercase opacity-60">© {new Date().getFullYear()} Lattév Jouel</div>
+        {/* Policy links */}
+        <div style={{ marginTop: "2rem", display: "flex", justifyContent: "center", gap: "1.5rem", flexWrap: "wrap", fontFamily: "'DM Sans', sans-serif", fontSize: "0.68rem", letterSpacing: "0.12em", textTransform: "uppercase", opacity: 0.55 }}>
+          <Link to="/policies/shipping" style={{ color: "inherit", textDecoration: "none" }}>Shipping</Link>
+          <Link to="/policies/returns" style={{ color: "inherit", textDecoration: "none" }}>Returns</Link>
+          <Link to="/policies/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms & FAQs</Link>
+        </div>
+        <div className="mt-6 text-[0.65rem] tracking-wider-luxe uppercase opacity-60">© {new Date().getFullYear()} Lattév Jouel</div>
       </footer>
     </div>
   );

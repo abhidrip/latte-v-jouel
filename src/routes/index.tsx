@@ -1,10 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Heart } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { useAppReady } from "../context/AppReadyContext";
+import { useWishlist } from "../context/WishlistContext";
 import { Scene3D } from "../components/Scene3D";
 import { LogoHero3D } from "../components/LogoHero3D";
 import { useSiteContent } from "../hooks/useSiteContent";
+import { useReviews } from "../hooks/useReviews";
+import { DiscountBanner } from "../components/ui/DiscountBanner";
 import heroVideoUrl from "../assets/hero-video.mp4?url";
 const boothAsset = { url: "/lattev-booth.png" };
 const heroVideoAsset = { url: heroVideoUrl };
@@ -34,16 +38,134 @@ function SplitText({ text, className }: { text: string; className?: string }) {
   );
 }
 
+// Self-hosted reel video player — pure autoplay, no Instagram UI
+// Place your reel .mp4 files at: /public/reels/reel-1.mp4, reel-2.mp4, reel-3.mp4, reel-4.mp4
+const REEL_VIDEOS = [
+  "/reels/reel-1.mp4",
+  "/reels/reel-2.mp4",
+  "/reels/reel-3.mp4",
+  "/reels/reel-4.mp4",
+];
+
+function ReelVideo({ src }: { src: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Pause on hover, play on leave
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    videoRef.current?.pause();
+  };
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    videoRef.current?.play();
+  };
+
+  return (
+    <div
+      className="reel-embed-container"
+      style={{ position: "relative", aspectRatio: "9 / 16", overflow: "hidden", borderRadius: 18 }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <video
+        ref={videoRef}
+        src={src}
+        autoPlay
+        muted
+        loop
+        playsInline
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
+          transition: "filter 0.4s ease",
+          filter: isHovered ? "brightness(0.65)" : "brightness(1)",
+        }}
+      />
+      {/* Subtle hover overlay — tap to pause indicator */}
+      {isHovered && (
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            width: 52,
+            height: 52,
+            background: "rgba(255,255,255,0.15)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.25)",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            {/* Pause icon */}
+            <div style={{ display: "flex", gap: 4 }}>
+              <div style={{ width: 4, height: 18, background: "white", borderRadius: 2 }} />
+              <div style={{ width: 4, height: 18, background: "white", borderRadius: 2 }} />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Bottom gradient — brand gold tint */}
+      <div style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: "30%",
+        background: "linear-gradient(to top, rgba(61,52,22,0.35), transparent)",
+        pointerEvents: "none",
+      }} />
+    </div>
+  );
+}
+
+function InstagramReels() {
+  return (
+    <div
+      className="community-reels"
+      style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem" }}
+    >
+      {REEL_VIDEOS.map((src) => (
+        <ReelVideo key={src} src={src} />
+      ))}
+    </div>
+  );
+}
+
+
 function Index() {
   const heroRef = useRef<HTMLDivElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
   const navRef = useRef<HTMLElement>(null);
 
   const marqueeRef = useRef<HTMLDivElement>(null);
   const showcaseRef = useRef<HTMLElement>(null);
   const { count } = useCart();
+  const { isAppReady } = useAppReady();
+  const { count: wishlistCount } = useWishlist();
   const { data: content } = useSiteContent();
+  const { data: reviews = [] } = useReviews();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Trigger video play the moment the loading screen exits.
+  // This solves autoplay on iOS Safari and other restrictive browsers.
+  useEffect(() => {
+    if (!isAppReady || !heroVideoRef.current) return;
+    heroVideoRef.current.play().catch(() => {
+      // Autoplay still blocked — nothing we can do without a user gesture
+    });
+  }, [isAppReady]);
 
 
   // GSAP + Lenis
@@ -165,85 +287,14 @@ function Index() {
 
   return (
     <div style={{ background: "#E8B98A", color: "#3D3416" }}>
-      <style>{`
-        .nav-solid { background: rgba(240,213,180,0.82) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(107,115,38,0.3) !important; }
-        @keyframes navLogoFloat {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-2px); }
-        }
-        .gold-shine {
-          background: linear-gradient(110deg, #4F5820 15%, #6B7326 30%, #B8C057 50%, #6B7326 70%, #4F5820 85%);
-          background-size: 200% auto;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          color: transparent;
-          font-style: normal;
-        }
-        .hero-mega-logo {
-          position: absolute;
-          top: 0; left: 0; right: 0;
-          height: 65%;
-          pointer-events: none;
-          z-index: 1;
-          overflow: hidden;
-        }
-        .hero-mega-logo span {
-          font-family: 'Kaushan Script', cursive;
-          font-weight: 400;
-          font-size: clamp(4rem, 15vw, 13rem);
-          letter-spacing: 0.02em;
-          background: linear-gradient(110deg, #4F5820 15%, #6B7326 45%, #B8C057 55%, #4F5820 85%);
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          white-space: nowrap;
-          opacity: 0.9;
-          max-width: 100%;
-          filter: drop-shadow(0 2px 12px rgba(0,0,0,0.35));
-        }
-
-        .showcase-panel {
-          position: absolute; inset: 0; display: flex; flex-direction: column;
-          align-items: center; justify-content: center; text-align: center;
-          padding: 0 1.5rem; pointer-events: none;
-          opacity: 0; transform: translateY(40px);
-          transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-        .showcase-panel.is-active { opacity: 1; transform: translateY(0); }
-        .showcase-progress {
-          position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);
-          display: flex; flex-direction: column; gap: 0.75rem; z-index: 5;
-        }
-        .showcase-progress span {
-          width: 2px; height: 28px; background: rgba(107,115,38,0.25);
-          display: block; transition: background 0.4s ease, height 0.4s ease;
-        }
-        .showcase-progress span.on { background: var(--color-gold); height: 44px; }
-        .nav-logo {
-          font-family: 'Kaushan Script', cursive;
-          font-size: clamp(1.8rem, 3vw, 2.8rem);
-          letter-spacing: 0.02em;
-          font-weight: 400;
-          text-transform: none;
-          color: var(--color-gold-soft);
-          text-shadow: 0 1px 2px rgba(0,0,0,0.35), 0 0 22px rgba(107,115,38,0.35);
-          background: none !important;
-          -webkit-text-fill-color: currentColor !important;
-          animation: navLogoFloat 4s ease-in-out infinite;
-        }
-        .nav-solid .nav-logo { color: #3D3416; text-shadow: 0 1px 0 rgba(255,255,255,0.35); }
-      `}</style>
-
-
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[200] flex flex-col p-6" style={{ background: "var(--background)", color: "var(--color-onyx)" }}>
+        <div className="fixed inset-0 z-[200] flex flex-col p-6" style={{ background: "var(--background)", color: "var(--color-umber)" }}>
           <div className="flex justify-between items-center mb-12">
-            <div className="font-display italic text-2xl" style={{ color: "var(--color-onyx)" }}>Lattév Jouel</div>
-            <button 
-              onClick={() => setIsMobileMenuOpen(false)} 
+            <div className="font-display italic text-2xl" style={{ color: "var(--color-umber)" }}>Lattév Jouel</div>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
               aria-label="Close menu"
               className="p-2 -mr-2"
             >
@@ -254,6 +305,18 @@ function Index() {
             <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)}>Collection</Link>
             <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
             <a href="#contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
+            <Link to="/wishlist" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              Wishlist
+              {wishlistCount > 0 && (
+                <span style={{ background: "var(--color-gold)", color: "white", fontSize: "0.65rem", fontWeight: 700, minWidth: 20, height: 20, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>{wishlistCount}</span>
+              )}
+            </Link>
+            <Link to="/cart" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              Cart
+              {count > 0 && (
+                <span style={{ background: "var(--color-gold)", color: "white", fontSize: "0.65rem", fontWeight: 700, minWidth: 20, height: 20, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>{count}</span>
+              )}
+            </Link>
           </div>
           <div className="mt-auto pb-8 uppercase text-sm tracking-widest" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>
             @lattevjouel
@@ -261,16 +324,20 @@ function Index() {
         </div>
       )}
 
+
       {/* Nav */}
       <nav ref={navRef} style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        padding: "1.4rem 2rem", transition: "background-color 0.6s ease, border-color 0.6s ease, backdrop-filter 0.6s ease",
+        transition: "background-color 0.6s ease, border-color 0.6s ease, backdrop-filter 0.6s ease",
         background: "transparent",
       }}>
+        {/* Banner sits at the very top of the fixed nav — this avoids overlap */}
+        <DiscountBanner />
+        <div style={{ padding: "1.4rem 2rem" }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
           {/* Mobile Menu Toggle (Top Left) */}
-          <button 
-            className="md:hidden flex items-center p-2 -ml-2" 
+          <button
+            className="md:hidden flex items-center p-2 -ml-2"
             onClick={() => setIsMobileMenuOpen(true)}
             aria-label="Open menu"
             style={{ color: "var(--color-onyx)", filter: "drop-shadow(0px 1px 4px rgba(255,255,255,0.4))" }}
@@ -297,8 +364,14 @@ function Index() {
           </div>
 
 
-          <div className="flex items-center gap-5 ml-auto md:ml-0">
-            <Link to="/cart" className="cart-nav-link" aria-label={`Cart (${count} item${count !== 1 ? 's' : ''})`} style={{ color: "var(--color-onyx)", filter: "drop-shadow(0px 1px 4px rgba(255,255,255,0.4))" }}>
+          <div className="flex items-center gap-5 ml-auto md:ml-0" style={{ color: "var(--color-onyx)", filter: "drop-shadow(0px 1px 4px rgba(255,255,255,0.4))" }}>
+            {/* Wishlist icon */}
+            <Link to="/wishlist" className="cart-nav-link" aria-label={`Wishlist (${wishlistCount})`}>
+              <Heart size={17} strokeWidth={1.5} fill={wishlistCount > 0 ? "var(--color-gold)" : "none"} stroke="currentColor" style={{ display: "block" }} />
+              {wishlistCount > 0 && <span className="cart-badge">{wishlistCount}</span>}
+            </Link>
+            {/* Cart bag icon */}
+            <Link to="/cart" className="cart-nav-link" aria-label={`Cart (${count} items)`}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}>
                 <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                 <line x1="3" y1="6" x2="21" y2="6" />
@@ -311,11 +384,13 @@ function Index() {
             </div>
           </div>
         </div>
+        </div>
       </nav>
 
       {/* Hero */}
       <section ref={heroRef} style={{ position: "relative", height: "100vh", minHeight: 600, overflow: "hidden", background: "var(--background)" }}>
         <video
+          ref={heroVideoRef}
           src={content?.hero_video_url || heroVideoAsset.url}
           autoPlay
           muted
@@ -355,11 +430,11 @@ function Index() {
           <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>
             <SplitText text={content?.hero_kicker || "— Maison Lattév Jouel —"} />
           </div>
-          <h1 className="font-display font-bold" style={{ color: "var(--color-ivory)", fontWeight: 700, fontSize: "clamp(1.8rem, 4.5vw, 4.2rem)", lineHeight: 1.1, letterSpacing: "0.02em", margin: 0 }}>
+          <h1 className="font-display font-bold" style={{ color: "var(--color-umber)", fontWeight: 700, fontSize: "clamp(1.8rem, 4.5vw, 4.2rem)", lineHeight: 1.1, letterSpacing: "0.02em", margin: 0 }}>
             <div><SplitText text={content?.hero_title_1 || "Crafted for the Bold"} /></div>
             <div style={{ color: "var(--color-gold)" }}><SplitText text={content?.hero_title_2 || "Made to be Worn"} /></div>
           </h1>
-          <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-ivory)", opacity: 0.85, fontSize: "0.78rem" }}>
+          <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-umber)", opacity: 0.85, fontSize: "0.78rem" }}>
             {content?.hero_subtitle || "Fine contemporary jewellery · Mumbai"}
           </div>
           <Link to="/shop" className="liquid-glass-btn font-bold" style={{ pointerEvents: "auto", marginTop: "0.5rem" }}>Explore Collection</Link>
@@ -383,7 +458,7 @@ function Index() {
       {/* 3D Showcase — pinned, scroll-interactive */}
       <section
         ref={showcaseRef}
-        style={{ position: "relative", height: "320vh", background: "#E8B98A", borderBottom: "1px solid rgba(107,115,38,0.2)" }}
+        style={{ position: "relative", height: "200vh", background: "#E8B98A", borderBottom: "1px solid rgba(107,115,38,0.2)" }}
       >
         <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden" }}>
           <Scene3D variant="showcase" />
@@ -396,9 +471,35 @@ function Index() {
             ))}
           </div>
 
+          {/* Mobile skip button — visible only on small screens */}
+          <button
+            className="md:hidden"
+            onClick={() => showcaseRef.current?.scrollIntoView({ block: "end", behavior: "smooth" })}
+            style={{
+              position: "absolute",
+              bottom: "2rem",
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 6,
+              background: "rgba(232,185,138,0.7)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(107,115,38,0.35)",
+              borderRadius: "999px",
+              color: "var(--color-gold)",
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: "0.6rem",
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
+              padding: "0.6rem 1.4rem",
+              cursor: "pointer",
+            }}
+          >
+            Skip ↓
+          </button>
+
           <div className="showcase-panel" data-panel={0}>
             <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>{content?.showcase_1_kicker || "The Métier"}</div>
-            <h2 className="font-display mt-6" style={{ fontWeight: 300, color: "var(--color-ivory)", fontSize: "clamp(2.4rem, 6vw, 5.5rem)", lineHeight: 1.05 }} dangerouslySetInnerHTML={{ __html: content?.showcase_1_title || "Sculpted in light." }} />
+            <h2 className="font-display mt-6" style={{ fontWeight: 300, color: "var(--color-umber)", fontSize: "clamp(2.4rem, 6vw, 5.5rem)", lineHeight: 1.05 }} dangerouslySetInnerHTML={{ __html: content?.showcase_1_title || "Sculpted in light." }} />
             <p className="mt-6 max-w-lg text-sm leading-relaxed" style={{ color: "rgba(61,52,22,0.7)" }}>
               {content?.showcase_1_desc || "Every contour shaped by hand — 22k gold reflections cast through the prism of intention."}
             </p>
@@ -406,7 +507,7 @@ function Index() {
 
           <div className="showcase-panel" data-panel={1}>
             <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>{content?.showcase_2_kicker || "The Geometry"}</div>
-            <h2 className="font-display mt-6" style={{ fontWeight: 300, color: "var(--color-ivory)", fontSize: "clamp(2.4rem, 6vw, 5.5rem)", lineHeight: 1.05 }} dangerouslySetInnerHTML={{ __html: content?.showcase_2_title || "Circles that <span style=\"color: var(--color-gold)\">spiral</span><br /> into devotion." }} />
+            <h2 className="font-display mt-6" style={{ fontWeight: 300, color: "var(--color-umber)", fontSize: "clamp(2.4rem, 6vw, 5.5rem)", lineHeight: 1.05 }} dangerouslySetInnerHTML={{ __html: content?.showcase_2_title || "Circles that <span style=\"color: var(--color-gold)\">spiral</span><br /> into devotion." }} />
             <p className="mt-6 max-w-lg text-sm leading-relaxed" style={{ color: "rgba(61,52,22,0.7)" }}>
               {content?.showcase_2_desc || "Seven rings, one orbit. A meditation in concentric symmetry, drawn from the maison's first archive."}
             </p>
@@ -414,7 +515,7 @@ function Index() {
 
           <div className="showcase-panel" data-panel={2}>
             <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>{content?.showcase_3_kicker || "The Maison"}</div>
-            <h2 className="font-display mt-6" style={{ fontWeight: 300, color: "var(--color-ivory)", fontSize: "clamp(2.4rem, 6vw, 5.5rem)", lineHeight: 1.05 }} dangerouslySetInnerHTML={{ __html: content?.showcase_3_title || "A ring, <span class=\"gold-shine\">awakened.</span>" }} />
+            <h2 className="font-display mt-6" style={{ fontWeight: 300, color: "var(--color-umber)", fontSize: "clamp(2.4rem, 6vw, 5.5rem)", lineHeight: 1.05 }} dangerouslySetInnerHTML={{ __html: content?.showcase_3_title || "A ring, <span class=\"gold-shine\">awakened.</span>" }} />
             <p className="mt-6 max-w-lg text-sm leading-relaxed" style={{ color: "rgba(61,52,22,0.7)" }}>
               {content?.showcase_3_desc || "Forged in 22k gold, polished by hand — an heirloom drawn from the maison's first archive."}
             </p>
@@ -452,44 +553,50 @@ function Index() {
         </div>
       </section>
 
-      {/* Community — Instagram reels */}
+      {/* Community — Live Instagram Reels (official embed) */}
       <section id="community" className="community-section">
         <div className="community-inner">
           <div style={{ textAlign: "center", marginBottom: "3rem" }}>
             <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", opacity: 0.8, fontSize: "0.75rem", marginBottom: "0.5rem" }}>Follow Along</div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontStyle: "normal", fontSize: "clamp(2rem, 4vw, 3rem)", marginTop: "0.5rem", color: "var(--color-ivory)", letterSpacing: "0.03em" }}>As Seen on Instagram</h2>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontStyle: "normal", fontSize: "clamp(2rem, 4vw, 3rem)", marginTop: "0.5rem", color: "var(--color-umber)", letterSpacing: "0.03em" }}>As Seen on Instagram</h2>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.78rem", color: "var(--color-umber)", opacity: 0.5, marginTop: "0.75rem" }}>Live reels · Updated automatically</p>
           </div>
-          <div className="community-reels">
-            {[
-              { url: "https://www.instagram.com/reel/DS7gAePgWCT/", cover: "https://dm2buy-resize-dynamic-cebdcaefgydgh6hu.z02.azurefd.net/dm2buy/YtdXSrYl5Slz.jpg?width=600&height=600" },
-              { url: "https://www.instagram.com/reel/DW8Y31KknUY/", cover: "https://dm2buy-resize-dynamic-cebdcaefgydgh6hu.z02.azurefd.net/dm2buy/kXEIbslhkuCz.jpg?width=600&height=600" },
-              { url: "https://www.instagram.com/reel/DRcaglXCBxm/", cover: "https://dm2buy-resize-dynamic-cebdcaefgydgh6hu.z02.azurefd.net/dm2buy/m956BXjLLHVL.jpg?width=600&height=600" },
-              { url: "https://www.instagram.com/reel/DRSBykiiP6N/", cover: "https://dm2buy-resize-dynamic-cebdcaefgydgh6hu.z02.azurefd.net/dm2buy/3PWp9ZODKYtR.jpg?width=600&height=600" },
-            ].map(({ url, cover }) => (
-              <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="community-reel" style={{ position: "relative", width: "100%", paddingBottom: "177.77%", overflow: "hidden", borderRadius: "18px", display: "block", cursor: "pointer", boxShadow: "0 10px 40px rgba(0,0,0,0.4)" }}>
-                {/* Reel Cover Image (9:16 Aspect Ratio) */}
-                <img src={cover} alt="Reel Cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.7s ease" }} className="hover:scale-105" />
-
-                {/* Cinematic Overlay */}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,10,0.8) 0%, rgba(10,10,10,0.1) 40%, rgba(10,10,10,0.4) 100%)", transition: "background 0.5s ease" }} className="hover:bg-black/20" />
-
-                {/* Play Button */}
-                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 56, height: 56, background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.3)", transition: "transform 0.4s ease" }} className="hover:scale-110">
-                  <div style={{ width: 0, height: 0, borderTop: "12px solid transparent", borderBottom: "12px solid transparent", borderLeft: "18px solid white", marginLeft: 6 }} />
-                </div>
-
-                {/* Watch on Instagram text */}
-                <div style={{ position: "absolute", bottom: "24px", left: 0, right: 0, textAlign: "center", fontFamily: "'DM Sans', sans-serif", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(255,255,255,0.8)" }}>
-                  Watch on Instagram
-                </div>
-              </a>
-            ))}
-          </div>
+          <InstagramReels />
         </div>
       </section>
 
+      {/* Reviews — customer screenshots, editable from admin app */}
+      {reviews.length > 0 && (
+        <section style={{ background: "var(--background)", padding: "6rem 0", overflow: "hidden" }}>
+          <div style={{ textAlign: "center", marginBottom: "3rem", padding: "0 1.5rem" }}>
+            <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", opacity: 0.8, fontSize: "0.75rem", marginBottom: "0.5rem" }}>Real Love</div>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: "clamp(2rem, 4vw, 3rem)", color: "var(--color-umber)", letterSpacing: "0.03em" }}>
+              {content?.reviews_heading || "What they're saying"}
+            </h2>
+          </div>
+          {/* Horizontal scroll carousel */}
+          <div style={{ display: "flex", gap: "1.25rem", overflowX: "auto", padding: "0.5rem 2rem 2rem", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+            {reviews.map((review) => (
+              <div key={review.id} style={{ flexShrink: 0, scrollSnapAlign: "start", width: "clamp(240px, 32vw, 320px)" }}>
+                <div style={{ background: "rgba(255,248,228,0.4)", backdropFilter: "blur(12px)", border: "1px solid rgba(107,115,38,0.18)", borderRadius: 16, overflow: "hidden" }}>
+                  <img
+                    src={review.screenshot_url}
+                    alt={`Review by ${review.customer_name}`}
+                    loading="lazy"
+                    style={{ width: "100%", display: "block", objectFit: "cover" }}
+                  />
+                  <div style={{ padding: "0.85rem 1.1rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.8rem", color: "var(--color-umber)", opacity: 0.7, letterSpacing: "0.04em" }}>
+                    — {review.customer_name}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Footer */}
-      <footer id="contact" style={{ background: "#E8B98A", color: "var(--color-ivory)", padding: "5rem 1.5rem 2rem", borderTop: "1px solid rgba(107,115,38,0.2)" }}>
+      <footer id="contact" style={{ background: "#E8B98A", color: "var(--color-umber)", padding: "5rem 1.5rem 2rem", borderTop: "1px solid rgba(107,115,38,0.2)" }}>
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
           <div>
             <img src={logoAsset.url} alt="Lattév Jouel" style={{ height: 96, width: "auto", display: "block" }} />
@@ -505,15 +612,12 @@ function Index() {
           </div>
           <div>
             <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem", marginBottom: "1.25rem" }}>Contact</div>
-            <p className="font-display text-2xl" style={{ color: "var(--color-ivory)" }}>Lavanya Pahwa</p>
+            <p className="font-display text-2xl" style={{ color: "var(--color-umber)" }}>Lavanya Pahwa</p>
             <ul className="mt-4 space-y-2 text-sm opacity-80">
               <li>
                 <a href="https://instagram.com/lattevjouel" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">
                   Instagram · <em className="font-display italic">@lattevjouel</em>
                 </a>
-              </li>
-              <li>
-                <a href="tel:+918077762221" className="hover:text-[var(--color-gold)] transition-colors">Ph. +91 80777 62221</a>
               </li>
               <li>
                 <a href="mailto:lavanyapahwa717@gmail.com" className="hover:text-[var(--color-gold)] transition-colors break-all">lavanyapahwa717@gmail.com</a>
@@ -522,7 +626,13 @@ function Index() {
             <p className="mt-5 text-base" style={{ color: "var(--color-gold)", fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontStyle: "normal", letterSpacing: "0.05em" }}>Love, Lattév.</p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-16 pt-6 border-t border-[rgba(107,115,38,0.15)] text-center text-[0.65rem] tracking-wider-luxe uppercase opacity-60">
+        {/* Policy links */}
+        <div className="max-w-7xl mx-auto mt-10" style={{ display: "flex", justifyContent: "center", gap: "1.5rem", flexWrap: "wrap", fontFamily: "'DM Sans', sans-serif", fontSize: "0.68rem", letterSpacing: "0.12em", textTransform: "uppercase", opacity: 0.5 }}>
+          <Link to="/policies/shipping" style={{ color: "var(--color-umber)", textDecoration: "none" }}>Shipping Policy</Link>
+          <Link to="/policies/returns" style={{ color: "var(--color-umber)", textDecoration: "none" }}>Returns</Link>
+          <Link to="/policies/terms" style={{ color: "var(--color-umber)", textDecoration: "none" }}>Terms & FAQs</Link>
+        </div>
+        <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-[rgba(107,115,38,0.15)] text-center text-[0.65rem] tracking-wider-luxe uppercase opacity-60">
           © {new Date().getFullYear()} Lattév Jouel. All pieces handcrafted in India.
         </div>
       </footer>

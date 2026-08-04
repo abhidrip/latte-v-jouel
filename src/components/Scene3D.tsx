@@ -93,9 +93,6 @@ export function Scene3D({ variant = "hero", className }: { variant?: Variant; cl
     scene.add(rim);
     scene.add(new THREE.AmbientLight(0x1a1a1a, 1));
 
-    // Floating particles removed (rendered as small squares on some GPUs)
-    const points = { rotation: { y: 0 } } as unknown as THREE.Points;
-
     // Resize
     const resize = () => {
       const w = mount.clientWidth;
@@ -153,9 +150,6 @@ export function Scene3D({ variant = "hero", className }: { variant?: Variant; cl
         camera.position.z = 4.5 - p * 1.2;
       }
 
-
-
-      points.rotation.y = t * 0.03;
       camera.position.x = current.x * 0.4;
       camera.position.y = -current.y * 0.3;
       camera.lookAt(0, 0, 0);

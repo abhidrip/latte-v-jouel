@@ -152,11 +152,11 @@ function ProductPage() {
               {product.category}
             </div>
             
-            <h1 className="font-display" style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", lineHeight: 1.1, color: "var(--color-ivory)", marginBottom: "1rem", fontWeight: 300 }}>
+            <h1 className="font-display" style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", lineHeight: 1.1, color: "var(--color-umber)", marginBottom: "1rem", fontWeight: 300 }}>
               {product.name}
             </h1>
             
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1.1rem", color: "var(--color-ivory)", opacity: 0.9, marginBottom: "2rem" }}>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "1.1rem", color: "var(--color-umber)", opacity: 0.9, marginBottom: "2rem" }}>
               {product.price ? (
                 <span>
                   ₹{product.price.toLocaleString("en-IN")}
@@ -168,31 +168,34 @@ function ProductPage() {
             </div>
 
             {product.description && (
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.95rem", lineHeight: 1.8, color: "var(--color-ivory)", opacity: 0.8, marginBottom: "3rem", borderTop: "1px solid rgba(232,185,138,0.2)", paddingTop: "2rem" }}>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.95rem", lineHeight: 1.8, color: "var(--color-umber)", opacity: 0.8, marginBottom: "3rem", borderTop: "1px solid rgba(232,185,138,0.2)", paddingTop: "2rem" }}>
                 {product.description}
               </p>
             )}
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "auto" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "auto" }}>
               {!product.sold && product.price ? (
                 <button 
                   onClick={() => addItem({ name: product.name, price: product.price!, img: product.img, href: `/product/${product.id}` })}
                   className="liquid-glass-btn"
-                  style={{ width: "100%", textAlign: "center", background: "var(--color-gold)", color: "white", padding: "1.2rem", border: "none" }}
+                  style={{ width: "100%", textAlign: "center", background: "var(--color-gold)", color: "white", padding: "1.2rem", border: "none", cursor: "pointer" }}
                 >
-                  + Add to Cart
+                  + Add to Selection
                 </button>
               ) : null}
 
-              <a 
-                href="https://instagram.com/lattevjouel" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="liquid-glass-btn"
-                style={{ width: "100%", textAlign: "center", background: "transparent", color: "var(--color-ivory)", border: "1px solid rgba(232,185,138,0.4)" }}
-              >
-                DM @lattevjouel to Buy
-              </a>
+              <p style={{ textAlign: "center", fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", color: "var(--color-umber)", opacity: 0.5, marginTop: product.sold ? 0 : "0.25rem" }}>
+                or{" "}
+                <a 
+                  href="https://instagram.com/lattevjouel" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--color-gold)", textDecoration: "underline" }}
+                >
+                  DM @lattevjouel
+                </a>
+                {" "}directly
+              </p>
             </div>
           </div>
         </div>

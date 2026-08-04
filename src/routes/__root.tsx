@@ -12,24 +12,26 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { CartProvider } from "../context/CartContext";
+import { AppReadyProvider } from "../context/AppReadyContext";
+import { WishlistProvider } from "../context/WishlistContext";
+import { LoadingScreen } from "../components/LoadingScreen";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
+    <div className="not-found-page">
+      <div className="not-found-page__eyebrow">Lattév Jouel</div>
+      <div className="not-found-page__headline" aria-hidden="true">404</div>
+      <h1 className="not-found-page__title">This piece doesn't exist.</h1>
+      <p className="not-found-page__sub">
+        The page you're looking for may have moved, or the URL is incorrect.
+      </p>
+      <div style={{ marginTop: "2.5rem" }}>
+        <Link
+          to="/"
+          className="liquid-glass-btn"
+        >
+          Return to Maison
+        </Link>
       </div>
     </div>
   );
@@ -83,12 +85,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Lattév Jouel — Fine Contemporary Jewellery" },
       { property: "og:description", content: "Crafted for the bold. Made to be worn." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/lattev_transparent.png" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "/lattev_transparent.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
+      {
+        rel: "preload",
+        as: "style",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Kaushan+Script&display=swap",
+      },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Kaushan+Script&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&display=swap",
@@ -120,10 +129,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-      </CartProvider>
+      <AppReadyProvider>
+        <WishlistProvider>
+          <CartProvider>
+            {/* Loading screen — shows on initial visit, auto-dismisses after 3s */}
+            <LoadingScreen />
+            {/* Required: nested routes render here */}
+            <Outlet />
+          </CartProvider>
+        </WishlistProvider>
+      </AppReadyProvider>
     </QueryClientProvider>
   );
 }

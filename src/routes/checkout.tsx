@@ -88,7 +88,7 @@ function CheckoutPage() {
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.8rem", color: "var(--color-gold)", marginBottom: "1rem" }}>
             Online Checkout is Offline
           </h2>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", color: "var(--color-ivory)", opacity: 0.8, marginBottom: "2rem", lineHeight: 1.6 }}>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", color: "var(--color-umber)", opacity: 0.8, marginBottom: "2rem", lineHeight: 1.6 }}>
             Our online payment gateway is currently down for maintenance. Please DM us on Instagram to finalize your order and arrange payment.
           </p>
           <a
