@@ -1,5 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
+import { toast } from 'sonner';
+import { useNavigate } from '@tanstack/react-router';
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type WishlistItem = {
@@ -30,6 +33,7 @@ const STORAGE_KEY = 'lattev_wishlist_v1';
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const navigate = useNavigate();
 
   // Load from localStorage after mount
   useEffect(() => {
@@ -55,12 +59,27 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, [items]);
 
   const toggleWishlist = useCallback((item: WishlistItem) => {
+    const exists = items.some((i) => i.id === item.id);
+    
     setItems((prev) => {
-      const exists = prev.some((i) => i.id === item.id);
       if (exists) return prev.filter((i) => i.id !== item.id);
       return [...prev, item];
     });
-  }, []);
+
+    if (!exists) {
+      toast("Added to Wishlist", {
+        description: `${item.name} has been added to your wishlist.`,
+        action: {
+          label: "View Wishlist",
+          onClick: () => navigate({ to: "/wishlist" }),
+        },
+      });
+    } else {
+      toast("Removed from Wishlist", {
+        description: `${item.name} has been removed from your wishlist.`,
+      });
+    }
+  }, [items, navigate]);
 
   const removeItem = useCallback((id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));

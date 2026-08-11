@@ -1,5 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 
+import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type CartItem = {
@@ -30,6 +33,7 @@ const STORAGE_KEY = "lattev_cart_v1";
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const navigate = useNavigate();
 
   // Load from localStorage after mount — SSR-safe (never runs on server)
   useEffect(() => {
@@ -64,7 +68,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, { ...item, quantity: 1 }];
     });
-  }, []);
+    
+    toast("Added to Cart", {
+      description: `${item.name} has been added to your cart.`,
+      action: {
+        label: "View Cart",
+        onClick: () => navigate({ to: "/cart" }),
+      },
+    });
+  }, [navigate]);
 
   const removeItem = useCallback((name: string) => {
     setItems((prev) => prev.filter((i) => i.name !== name));

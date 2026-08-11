@@ -15,6 +15,7 @@ import { CartProvider } from "../context/CartContext";
 import { AppReadyProvider } from "../context/AppReadyContext";
 import { WishlistProvider } from "../context/WishlistContext";
 import { LoadingScreen } from "../components/LoadingScreen";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -134,6 +135,7 @@ function RootComponent() {
           <CartProvider>
             {/* Loading screen — shows on initial visit, auto-dismisses after 3s */}
             <LoadingScreen />
+            <Toaster />
             {/* Required: nested routes render here */}
             <Outlet />
           </CartProvider>

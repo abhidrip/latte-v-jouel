@@ -1579,3 +1579,21 @@ body {
 .discount-banner__close:hover {
   color: #E8B98A;
 }
+
+/* ── Reels & Reviews responsive grids ─────────────────────────────────────── */
+/* Default: 2 columns (mobile) */
+.community-reels-grid,
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+/* Desktop: 4 columns */
+@media (min-width: 768px) {
+  .community-reels-grid,
+  .reviews-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+  }
+}

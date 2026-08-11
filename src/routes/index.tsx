@@ -8,6 +8,7 @@ import { Scene3D } from "../components/Scene3D";
 import { LogoHero3D } from "../components/LogoHero3D";
 import { useSiteContent } from "../hooks/useSiteContent";
 import { useReviews } from "../hooks/useReviews";
+import { useReels } from "../hooks/useReels";
 import { DiscountBanner } from "../components/ui/DiscountBanner";
 import heroVideoUrl from "../assets/hero-video.mp4?url";
 const boothAsset = { url: "/lattev-booth.png" };
@@ -39,104 +40,73 @@ function SplitText({ text, className }: { text: string; className?: string }) {
 }
 
 // Self-hosted reel video player — pure autoplay, no Instagram UI
-// Place your reel .mp4 files at: /public/reels/reel-1.mp4, reel-2.mp4, reel-3.mp4, reel-4.mp4
-const REEL_VIDEOS = [
-  "/reels/reel-1.mp4",
-  "/reels/reel-2.mp4",
-  "/reels/reel-3.mp4",
-  "/reels/reel-4.mp4",
-];
-
-function ReelVideo({ src }: { src: string }) {
+// Clicking opens the Instagram reel in a new tab
+function ReelVideo({ src, instagramUrl }: { src: string; instagramUrl: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Pause on hover, play on leave
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    videoRef.current?.pause();
-  };
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    videoRef.current?.play();
-  };
+  const handleMouseEnter = () => { setIsHovered(true); videoRef.current?.pause(); };
+  const handleMouseLeave = () => { setIsHovered(false); videoRef.current?.play(); };
 
   return (
-    <div
-      className="reel-embed-container"
-      style={{ position: "relative", aspectRatio: "9 / 16", overflow: "hidden", borderRadius: 18 }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <a
+      href={instagramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ display: "block", textDecoration: "none" }}
+      aria-label="Watch on Instagram"
     >
-      <video
-        ref={videoRef}
-        src={src}
-        autoPlay
-        muted
-        loop
-        playsInline
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-          transition: "filter 0.4s ease",
-          filter: isHovered ? "brightness(0.65)" : "brightness(1)",
-        }}
-      />
-      {/* Subtle hover overlay — tap to pause indicator */}
-      {isHovered && (
-        <div style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          pointerEvents: "none",
-        }}>
-          <div style={{
-            width: 52,
-            height: 52,
-            background: "rgba(255,255,255,0.15)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.25)",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-            {/* Pause icon */}
-            <div style={{ display: "flex", gap: 4 }}>
-              <div style={{ width: 4, height: 18, background: "white", borderRadius: 2 }} />
-              <div style={{ width: 4, height: 18, background: "white", borderRadius: 2 }} />
+      <div
+        className="reel-embed-container"
+        style={{ position: "relative", aspectRatio: "9 / 16", overflow: "hidden", borderRadius: 18, cursor: "pointer" }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <video
+          ref={videoRef}
+          src={src}
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+            transition: "filter 0.4s ease",
+            filter: isHovered ? "brightness(0.65)" : "brightness(1)",
+          }}
+        />
+        {/* Hover overlay */}
+        {isHovered && (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+            <div style={{ width: 52, height: 52, background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {/* Instagram icon */}
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <circle cx="12" cy="12" r="4"/>
+                <circle cx="17.5" cy="6.5" r="0.5" fill="white"/>
+              </svg>
             </div>
           </div>
-        </div>
-      )}
-      {/* Bottom gradient — brand gold tint */}
-      <div style={{
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: "30%",
-        background: "linear-gradient(to top, rgba(61,52,22,0.35), transparent)",
-        pointerEvents: "none",
-      }} />
-    </div>
+        )}
+        {/* Bottom gradient */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to top, rgba(61,52,22,0.35), transparent)", pointerEvents: "none" }} />
+      </div>
+    </a>
   );
 }
 
 function InstagramReels() {
+  const { data: reels = [] } = useReels();
+
   return (
-    <div
-      className="community-reels"
-      style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem" }}
-    >
-      {REEL_VIDEOS.map((src) => (
-        <ReelVideo key={src} src={src} />
+    <div className="community-reels-grid">
+      {reels.map((reel) => (
+        <ReelVideo key={reel.id} src={reel.video_url} instagramUrl={reel.instagram_url} />
       ))}
     </div>
   );
@@ -574,23 +544,25 @@ function Index() {
               {content?.reviews_heading || "What they're saying"}
             </h2>
           </div>
-          {/* Horizontal scroll carousel */}
-          <div style={{ display: "flex", gap: "1.25rem", overflowX: "auto", padding: "0.5rem 2rem 2rem", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
-            {reviews.map((review) => (
-              <div key={review.id} style={{ flexShrink: 0, scrollSnapAlign: "start", width: "clamp(240px, 32vw, 320px)" }}>
-                <div style={{ background: "rgba(255,248,228,0.4)", backdropFilter: "blur(12px)", border: "1px solid rgba(107,115,38,0.18)", borderRadius: 16, overflow: "hidden" }}>
-                  <img
-                    src={review.screenshot_url}
-                    alt={`Review by ${review.customer_name}`}
-                    loading="lazy"
-                    style={{ width: "100%", display: "block", objectFit: "cover" }}
-                  />
-                  <div style={{ padding: "0.85rem 1.1rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.8rem", color: "var(--color-umber)", opacity: 0.7, letterSpacing: "0.04em" }}>
-                    — {review.customer_name}
+          {/* Grid: 2 cols on mobile, 4 on desktop */}
+          <div style={{ padding: "0 1rem" }}>
+            <div className="reviews-grid">
+              {reviews.map((review) => (
+                <div key={review.id}>
+                  <div style={{ background: "rgba(255,248,228,0.4)", backdropFilter: "blur(12px)", border: "1px solid rgba(107,115,38,0.18)", borderRadius: 16, overflow: "hidden" }}>
+                    <img
+                      src={review.screenshot_url}
+                      alt={`Review by ${review.customer_name}`}
+                      loading="lazy"
+                      style={{ width: "100%", display: "block", objectFit: "cover" }}
+                    />
+                    <div style={{ padding: "0.65rem 0.85rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", color: "var(--color-umber)", opacity: 0.7, letterSpacing: "0.04em" }}>
+                      — {review.customer_name}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
       )}
