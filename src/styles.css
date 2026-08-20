@@ -33,6 +33,46 @@ body {
   font-optical-sizing: auto;
 }
 
+/* ── Performance: compositor-layer hints ────────────────────────────────────
+   Give the browser a head-start on promoting animated elements to their own
+   GPU layers. This eliminates mid-scroll repaints on the hero and marquee.   */
+.hero-mega-logo,
+.community-reels-grid video,
+.fp-card-img,
+.also-featured-photo {
+  will-change: transform;
+}
+
+/* content-visibility: auto — tells the browser to skip layout/paint for
+   sections that are far off-screen. Huge win on long-scroll pages.           */
+#community,
+#about,
+.also-featured-section,
+.featured-pieces-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 600px; /* estimated height prevents scroll-bar jump */
+}
+
+/* ── Mobile performance overrides ───────────────────────────────────────────
+   Disable expensive CSS effects on small screens to reclaim GPU headroom.    */
+@media (max-width: 768px) {
+  /* backdrop-filter is extremely expensive on mobile — disable it            */
+  .fp-card-info,
+  .also-featured-card,
+  .fp-card-hover-cta {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Reduce transition durations on mobile for snappier feel                  */
+  .fp-card,
+  .also-featured-card,
+  .fp-card-img,
+  .also-featured-photo {
+    transition-duration: 0.25s !important;
+  }
+}
+
 .font-display {
   font-family: "Cormorant Garamond", serif;
   font-optical-sizing: auto;
@@ -213,10 +253,17 @@ body {
   vertical-align: top;
 }
 
-.split-word>span {
+.split-word > span {
   display: inline-block;
   transform: translate3d(0, 110%, 0);
   will-change: transform;
+  /* Hidden until GSAP takes control — prevents the unstyled flash on load */
+  opacity: 0;
+}
+
+/* GSAP sets this class when it has initialised the animation */
+.gsap-ready .split-word > span {
+  opacity: 1;
 }
 
 * {
@@ -1595,5 +1642,629 @@ body {
   .reviews-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 1.25rem;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   ALSO FEATURED ON SECTION
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.also-featured-section {
+  background: #E8B98A;
+  padding: 6rem 0;
+  border-top: 1px solid rgba(107, 115, 38, 0.18);
+  border-bottom: 1px solid rgba(107, 115, 38, 0.18);
+  overflow: hidden;
+}
+
+.also-featured-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.also-featured-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+/* The card: a horizontal split — person on left, product on right */
+.also-featured-card {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2rem;
+  background: rgba(255, 248, 228, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(107, 115, 38, 0.18);
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 2rem;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.also-featured-card:hover {
+  box-shadow: 0 16px 48px rgba(61, 52, 22, 0.14);
+  transform: translateY(-2px);
+}
+
+/* Mobile: stack vertically */
+@media (max-width: 767px) {
+  .also-featured-card {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+}
+
+/* Person side */
+.also-featured-person {
+  display: flex;
+  justify-content: center;
+}
+
+.also-featured-photo-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(61, 52, 22, 0.18);
+}
+
+.also-featured-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  aspect-ratio: 3 / 4;
+  transition: transform 0.6s ease;
+}
+
+.also-featured-photo-wrap:hover .also-featured-photo {
+  transform: scale(1.04);
+}
+
+.also-featured-name-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 1.2rem 1rem;
+  background: linear-gradient(to top, rgba(61, 52, 22, 0.72) 0%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.also-featured-name {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #f7e5ce;
+  letter-spacing: 0.04em;
+}
+
+.also-featured-desc {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(247, 229, 206, 0.75);
+}
+
+/* Divider between person and product */
+.also-featured-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+@media (max-width: 767px) {
+  .also-featured-divider {
+    flex-direction: row;
+    justify-content: center;
+    padding: 0;
+  }
+  .also-featured-divider-line {
+    width: 60px !important;
+    height: 1px !important;
+  }
+}
+
+.also-featured-divider-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  opacity: 0.5;
+}
+
+.also-featured-divider-line {
+  width: 1px;
+  height: 60px;
+  background: linear-gradient(to bottom, transparent, var(--color-gold), transparent);
+  opacity: 0.45;
+}
+
+/* Product side */
+.also-featured-product {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+@media (min-width: 768px) {
+  .also-featured-product {
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+  }
+}
+
+.also-featured-product-img-wrap {
+  flex-shrink: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(232, 185, 138, 0.25);
+  width: 100%;
+  max-width: 200px;
+}
+
+@media (max-width: 767px) {
+  .also-featured-product-img-wrap {
+    max-width: 100%;
+  }
+}
+
+.also-featured-product-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.also-featured-product-img-wrap:hover .also-featured-product-img {
+  transform: scale(1.05);
+}
+
+.also-featured-product-img--placeholder {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(232, 185, 138, 0.35);
+  border: 1px dashed rgba(107, 115, 38, 0.3);
+  border-radius: 14px;
+}
+
+.also-featured-product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.also-featured-product-name {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  font-weight: 400;
+  color: var(--color-umber);
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+}
+
+.also-featured-product-price {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-gold);
+  margin-top: 0.25rem;
+  letter-spacing: 0.06em;
+}
+
+.also-featured-shop-btn {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.65rem 1.5rem;
+  background: var(--color-umber);
+  color: #f7e5ce;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.also-featured-shop-btn:hover {
+  background: transparent;
+  color: var(--color-umber);
+  border-color: var(--color-umber);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FEATURED PIECES SLIDER SECTION — Premium Redesign
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.featured-pieces-section {
+  background: #E8B98A;
+  padding: 6rem 0 5rem;
+  border-top: 1px solid rgba(107, 115, 38, 0.18);
+  overflow: hidden;
+}
+
+.featured-pieces-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Header row */
+.fp-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fp-title {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 300;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  color: var(--color-umber);
+  letter-spacing: 0.04em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.fp-subtitle {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.78rem;
+  color: var(--color-umber);
+  opacity: 0.5;
+  margin-top: 0.5rem;
+}
+
+/* Nav arrows group */
+.fp-nav {
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+/* The horizontally-scrollable slider */
+.fp-slider {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 0.5rem;
+  cursor: grab;
+  /* Bleed past the inner padding on mobile */
+  margin-left: -0.5rem;
+  padding-left: 0.5rem;
+}
+
+.fp-slider::-webkit-scrollbar { display: none; }
+.fp-slider:active { cursor: grabbing; }
+
+/* Individual product card — editorial tall format */
+.fp-card {
+  flex: 0 0 auto;
+  width: clamp(200px, 26vw, 290px);
+  scroll-snap-align: start;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(240, 220, 190, 0.4);
+  border: 1px solid rgba(107, 115, 38, 0.14);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: block;
+  color: var(--color-umber);
+  text-decoration: none;
+  position: relative;
+}
+
+.fp-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 24px 56px rgba(61, 52, 22, 0.2),
+              0 8px 16px rgba(61, 52, 22, 0.1);
+}
+
+/* Image wrapper — taller aspect ratio for editorial feel */
+.fp-card-img-wrap {
+  position: relative;
+  overflow: hidden;
+  background: rgba(220, 185, 140, 0.25);
+}
+
+.fp-card-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+.fp-card:hover .fp-card-img {
+  transform: scale(1.08);
+}
+
+.fp-card-img--placeholder {
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(220, 185, 140, 0.3);
+}
+
+/* Persistent bottom gradient over image */
+.fp-card-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(61, 52, 22, 0.55) 0%,
+    rgba(61, 52, 22, 0.12) 40%,
+    transparent 65%
+  );
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+/* Hover CTA — slides up from below on hover */
+.fp-card-hover-cta {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.9rem 1.1rem;
+  background: rgba(61, 52, 22, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #f7e5ce;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+}
+
+.fp-card:hover .fp-card-hover-cta {
+  transform: translateY(0);
+}
+
+/* Info strip below image */
+.fp-card-info {
+  padding: 0.9rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  background: rgba(255, 248, 228, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.fp-card-name {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-umber);
+  line-height: 1.3;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fp-card-price {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  letter-spacing: 0.08em;
+}
+
+/* Nav arrow buttons */
+.fp-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(107, 115, 38, 0.4);
+  background: rgba(255, 248, 228, 0.6);
+  backdrop-filter: blur(8px);
+  color: var(--color-umber);
+  cursor: pointer;
+  transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease, color 0.22s ease;
+  flex-shrink: 0;
+}
+
+.fp-nav-btn:hover {
+  background: var(--color-umber);
+  border-color: var(--color-umber);
+  color: #f7e5ce;
+  transform: scale(1.1);
+}
+
+/* Mobile swipe hint */
+.fp-swipe-hint {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-umber);
+  opacity: 0.38;
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FOUNDER LETTER SECTION
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.founder-letter-section {
+  background: #f9f0e3;   /* warm cream — distinct from the amber background */
+  padding: 7rem 0 6rem;
+  border-top: 1px solid rgba(107, 115, 38, 0.15);
+  border-bottom: 1px solid rgba(107, 115, 38, 0.15);
+}
+
+.founder-letter-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.founder-letter-eyebrow {
+  color: var(--color-gold);
+  opacity: 0.75;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+/* Pull-quote — large, elegant, centred */
+.founder-letter-quote {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.55rem, 3.5vw, 2.4rem);
+  color: var(--color-umber);
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin: 0 0 3.5rem;
+  padding: 0 1rem;
+  position: relative;
+}
+
+/* Decorative line above/below quote */
+.founder-letter-quote::before,
+.founder-letter-quote::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 1px;
+  background: var(--color-gold);
+  opacity: 0.55;
+  margin: 0 auto;
+}
+.founder-letter-quote::before { margin-bottom: 1.75rem; }
+.founder-letter-quote::after  { margin-top: 1.75rem; }
+
+/* Two-column prose body */
+.founder-letter-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem 3rem;
+  margin-bottom: 2.5rem;
+}
+
+.founder-letter-col p {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: var(--color-umber);
+  opacity: 0.82;
+  margin-bottom: 1.15rem;
+}
+
+.founder-letter-col p em {
+  font-style: italic;
+  color: var(--color-gold-soft);
+  opacity: 1;
+}
+
+.founder-letter-col p strong {
+  font-weight: 700;
+  color: var(--color-umber);
+  opacity: 1;
+}
+
+/* Closing paragraph — centred, slightly larger */
+.founder-letter-closing {
+  font-family: "DM Sans", sans-serif;
+  font-size: 1rem;
+  line-height: 1.85;
+  color: var(--color-umber);
+  opacity: 0.78;
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 1.25rem;
+  font-style: italic;
+}
+
+.founder-letter-thanks {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.95rem;
+  color: var(--color-umber);
+  opacity: 0.65;
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+/* Signature block */
+.founder-letter-sig {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.founder-letter-sig-name {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: var(--color-umber);
+  letter-spacing: 0.04em;
+}
+
+.founder-letter-sig-title {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  opacity: 0.7;
+}
+
+/* Mobile — single column */
+@media (max-width: 680px) {
+  .founder-letter-body {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .founder-letter-quote {
+    font-size: 1.35rem;
+  }
+
+  .founder-letter-section {
+    padding: 5rem 0 4rem;
   }
 }

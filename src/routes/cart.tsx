@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useCallback } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCart } from "../context/CartContext";
 
 export const Route = createFileRoute("/cart")({
@@ -15,201 +14,41 @@ export const Route = createFileRoute("/cart")({
   component: CartPage,
 });
 
-// ─── Razorpay types ──────────────────────────────────────────────────────────
 
-declare global {
-  interface Window {
-    Razorpay: new (opts: RazorpayOptions) => RazorpayInstance;
-  }
+// ─── Trust badge components ───────────────────────────────────────────────────
+
+function PayBadge({ label, color, mono }: { label: string; color: string; mono?: boolean }) {
+  return (
+    <div style={{
+      padding: "0.2rem 0.55rem",
+      borderRadius: 4,
+      border: `1.5px solid ${color}22`,
+      background: `${color}12`,
+      fontFamily: mono ? "monospace" : "'DM Sans', sans-serif",
+      fontSize: "0.58rem",
+      fontWeight: 700,
+      letterSpacing: mono ? "0.05em" : "0.06em",
+      color,
+      opacity: 0.85,
+      userSelect: "none",
+    }}>
+      {label}
+    </div>
+  );
 }
 
-interface RazorpayOptions {
-  key: string;
-  amount: number;        // paise
-  currency: string;
-  name: string;
-  description: string;
-  image?: string;
-  prefill?: { name?: string; email?: string; contact?: string };
-  theme?: { color?: string };
-  handler: (response: RazorpayPaymentResponse) => void;
-  modal?: { ondismiss?: () => void };
-  notes?: Record<string, string>;
-  // Explicitly list payment methods (ensures UPI is always shown)
-  method?: {
-    upi?: boolean;
-    card?: boolean;
-    netbanking?: boolean;
-    wallet?: boolean;
-    emi?: boolean;
-    paylater?: boolean;
-  };
-  config?: {
-    display?: {
-      blocks?: Record<string, { name: string; instruments: { method: string }[] }>;
-      sequence?: string[];
-      preferences?: { show_default_blocks?: boolean };
-    };
-  };
+function MastercardBadge() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+      <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#EB001B", opacity: 0.85 }} />
+      <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#F79E1B", opacity: 0.85, marginLeft: -5 }} />
+    </div>
+  );
 }
-
-interface RazorpayInstance {
-  open(): void;
-}
-
-interface RazorpayPaymentResponse {
-  razorpay_payment_id: string;
-}
-
-// ─── Load Razorpay SDK lazily ─────────────────────────────────────────────────
-
-function loadRazorpay(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (window.Razorpay) { resolve(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-}
-
-const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID as string;
-
-// ─── Cart Page ────────────────────────────────────────────────────────────────
-
-type CheckoutState = "idle" | "collecting" | "processing" | "success" | "error";
 
 function CartPage() {
-  const { items, total, count, removeItem, setQty, clearCart } = useCart();
-
-  // Checkout flow state
-  const [checkoutState, setCheckoutState] = useState<CheckoutState>("idle");
-  const [paymentId, setPaymentId] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string>("");
-
-  // Customer details
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-
-  const handleCheckout = useCallback(async () => {
-    setCheckoutState("processing");
-    setErrorMsg("");
-
-    const loaded = await loadRazorpay();
-    if (!loaded) {
-      setErrorMsg("Could not load payment gateway. Please check your connection.");
-      setCheckoutState("error");
-      return;
-    }
-
-    const itemsSummary = items.map((i) => `${i.name} ×${i.quantity}`).join(", ");
-
-    const options: RazorpayOptions = {
-      key: RAZORPAY_KEY,
-      amount: total * 100, // paise (₹1 = 100 paise)
-      currency: "INR",
-      name: "Lattév Jouel",
-      description: itemsSummary,
-      image: "/lattev_transparent.png",
-      prefill: {
-        name: customerName,
-        email: customerEmail,
-        contact: customerPhone,
-      },
-      theme: { color: "#4F5820" },
-      // Explicitly enable all methods including UPI
-      // In test mode UPI may be limited; all methods activate with live keys
-      method: {
-        upi: true,
-        card: true,
-        netbanking: true,
-        wallet: true,
-        emi: false,
-        paylater: false,
-      },
-      // Show UPI first in the payment method list
-      config: {
-        display: {
-          blocks: {
-            upi_block: {
-              name: "Pay via UPI",
-              instruments: [{ method: "upi" }],
-            },
-            other: {
-              name: "Other Methods",
-              instruments: [
-                { method: "card" },
-                { method: "netbanking" },
-                { method: "wallet" },
-              ],
-            },
-          },
-          sequence: ["block.upi_block", "block.other"],
-          preferences: { show_default_blocks: false },
-        },
-      },
-      notes: {
-        items: itemsSummary,
-        customer_name: customerName,
-        customer_email: customerEmail,
-      },
-      handler: (response: RazorpayPaymentResponse) => {
-        setPaymentId(response.razorpay_payment_id);
-        clearCart();
-        setCheckoutState("success");
-      },
-      modal: {
-        ondismiss: () => {
-          setCheckoutState("collecting");
-        },
-      },
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  }, [items, total, customerName, customerEmail, customerPhone, clearCart]);
-
-  // ── Success screen ─────────────────────────────────────────────────────────
-  if (checkoutState === "success") {
-    return (
-      <div style={{ background: "#E8B98A", color: "#3D3416", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", textAlign: "center" }}>
-        <div style={{ background: "rgba(255,248,228,0.5)", backdropFilter: "blur(20px)", border: "1px solid rgba(107,115,38,0.2)", borderRadius: 24, padding: "3.5rem 3rem", maxWidth: 480, width: "100%" }}>
-          {/* Checkmark */}
-          <div style={{ width: 72, height: 72, borderRadius: "50%", border: "1.5px solid rgba(107,115,38,0.4)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 2rem" }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6B7326" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--color-gold)", marginBottom: "0.75rem", opacity: 0.7 }}>
-            Payment Confirmed
-          </div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 300, fontSize: "2.4rem", lineHeight: 1.1, marginBottom: "1rem" }}>
-            Thank you, {customerName || "dear customer"}.
-          </h1>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.82rem", opacity: 0.6, lineHeight: 1.7, marginBottom: "1.5rem" }}>
-            Your payment was received. We'll be in touch shortly to confirm your order and arrange delivery.
-          </p>
-
-          {paymentId && (
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.68rem", opacity: 0.4, letterSpacing: "0.08em", marginBottom: "2rem", wordBreak: "break-all" }}>
-              Payment ID: {paymentId}
-            </div>
-          )}
-
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "normal", fontSize: "1.15rem", color: "var(--color-gold-soft)", letterSpacing: "0.05em", marginBottom: "2rem" }}>
-            Love, Lattév.
-          </p>
-
-          <Link to="/shop" className="liquid-glass-btn" style={{ display: "inline-block" }}>
-            Continue Shopping
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const { items, total, count, removeItem, setQty } = useCart();
+  const navigate = useNavigate();
 
   return (
     <div style={{ background: "#E8B98A", color: "#3D3416", minHeight: "100vh" }}>
@@ -248,7 +87,7 @@ function CartPage() {
           </Link>
           <Link to="/" aria-label="Lattév Jouel home">
             <img
-              src="/lattev_transparent.png"
+              src="/lattev_transparent.webp"
               alt="Lattév Jouel"
               style={{
                 height: "clamp(40px, 4vw, 56px)",
@@ -440,108 +279,74 @@ function CartPage() {
                 <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: "1.18rem", color: "var(--color-umber)" }}>₹{total.toLocaleString("en-IN")}</span>
               </div>
 
-              {/* ── Customer Details Form ── */}
-              {(checkoutState === "idle" || checkoutState === "collecting") && (
-                <div style={{ marginBottom: "1.25rem" }}>
-                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--color-gold)", opacity: 0.8, marginBottom: "0.85rem" }}>
-                    Your Details
-                  </div>
-                  {[
-                    { id: "cust-name", label: "Full Name", value: customerName, setter: setCustomerName, type: "text", placeholder: "Lavanya Pahwa", required: true },
-                    { id: "cust-email", label: "Email", value: customerEmail, setter: setCustomerEmail, type: "email", placeholder: "hello@example.com", required: false },
-                    { id: "cust-phone", label: "Phone", value: customerPhone, setter: setCustomerPhone, type: "tel", placeholder: "+91 98765 43210", required: true },
-                  ].map(({ id, label, value, setter, type, placeholder, required }) => (
-                    <div key={id} style={{ marginBottom: "0.75rem" }}>
-                      <label htmlFor={id} style={{ display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: "0.68rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--color-umber)", opacity: 0.5, marginBottom: "0.3rem" }}>
-                        {label}{required && " *"}
-                      </label>
-                      <input
-                        id={id}
-                        type={type}
-                        value={value}
-                        onChange={(e) => setter(e.target.value)}
-                        placeholder={placeholder}
-                        style={{
-                          width: "100%",
-                          padding: "0.65rem 0.85rem",
-                          fontFamily: "'DM Sans', sans-serif",
-                          fontSize: "0.82rem",
-                          color: "var(--color-umber)",
-                          background: "rgba(255,248,228,0.4)",
-                          border: "1px solid rgba(107,115,38,0.25)",
-                          borderRadius: 8,
-                          outline: "none",
-                          boxSizing: "border-box",
-                          transition: "border-color 0.2s",
-                        }}
-                        onFocus={(e) => { (e.target as HTMLElement).style.borderColor = "rgba(107,115,38,0.6)"; }}
-                        onBlur={(e) => { (e.target as HTMLElement).style.borderColor = "rgba(107,115,38,0.25)"; }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
 
-              {/* Error message */}
-              {checkoutState === "error" && (
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", color: "#c0392b", marginBottom: "1rem", lineHeight: 1.5 }}>
-                  {errorMsg}
-                </p>
-              )}
-
-              {/* ── Pay Button ── */}
-              <button
-                type="button"
-                disabled={checkoutState === "processing" || !customerName.trim() || !customerPhone.trim()}
-                onClick={handleCheckout}
+              {/* ── Proceed to Checkout ── */}
+              <Link
+                to="/checkout"
                 style={{
                   display: "block",
                   width: "100%",
-                  padding: "1rem",
+                  padding: "1.05rem",
                   fontFamily: "'DM Sans', sans-serif",
                   fontSize: "0.78rem",
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
                   fontWeight: 700,
                   color: "#fff",
-                  background: checkoutState === "processing"
-                    ? "rgba(79,88,32,0.5)"
-                    : "linear-gradient(135deg, #4F5820 0%, #6B7326 100%)",
+                  background: "linear-gradient(135deg, #4F5820 0%, #6B7326 100%)",
                   border: "none",
                   borderRadius: 10,
-                  cursor: checkoutState === "processing" || !customerName.trim() || !customerPhone.trim() ? "not-allowed" : "pointer",
+                  textAlign: "center",
+                  textDecoration: "none",
                   transition: "opacity 0.2s, transform 0.15s",
-                  opacity: (!customerName.trim() || !customerPhone.trim()) ? 0.5 : 1,
+                  boxSizing: "border-box",
                 }}
-                onMouseEnter={(e) => {
-                  if (customerName.trim() && customerPhone.trim() && checkoutState !== "processing") {
-                    (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
-                    (e.currentTarget as HTMLElement).style.opacity = "0.92";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLElement).style.opacity = (!customerName.trim() || !customerPhone.trim()) ? "0.5" : "1";
-                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.opacity = "0.92"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.opacity = "1"; }}
               >
-                {checkoutState === "processing" ? "Opening Payment…" : `Pay ₹${total.toLocaleString("en-IN")} →`}
-              </button>
+                Proceed to Checkout →
+              </Link>
 
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.68rem", color: "var(--color-umber)", opacity: 0.4, textAlign: "center", marginTop: "0.85rem", lineHeight: 1.6 }}>
-                Secured by Razorpay · UPI, Cards, NetBanking &amp; more
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.62rem", color: "var(--color-umber)", opacity: 0.35, textAlign: "center", marginTop: "0.75rem" }}>
+                UPI · Cards · COD · 256-bit SSL
               </p>
 
-              {/* Razorpay logo row */}
-              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", marginTop: "0.75rem", opacity: 0.3 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.62rem", letterSpacing: "0.1em" }}>SSL Encrypted</span>
+              {/* ── Trust & payment badges ── */}
+              <div style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {/* Payment methods */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  {/* UPI */}
+                  <PayBadge label="UPI" color="#5f259f" />
+                  {/* Visa */}
+                  <PayBadge label="VISA" color="#1a1f71" mono />
+                  {/* Mastercard */}
+                  <MastercardBadge />
+                  {/* RuPay */}
+                  <PayBadge label="RuPay" color="#016938" />
+                  {/* NetBanking */}
+                  <PayBadge label="Net Banking" color="#2d4a8a" />
+                </div>
+
+                {/* SSL + shipping */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "1rem", opacity: 0.45 }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.6rem", letterSpacing: "0.08em" }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    256-bit SSL
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.6rem", letterSpacing: "0.08em" }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                    {total >= 1000 ? "Free shipping applied" : `Free shipping over ₹1,000`}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </section>
+
       )}
     </div>
   );

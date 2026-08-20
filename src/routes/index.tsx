@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X, Heart } from "lucide-react";
+import { Menu, X, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAppReady } from "../context/AppReadyContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -9,11 +9,13 @@ import { LogoHero3D } from "../components/LogoHero3D";
 import { useSiteContent } from "../hooks/useSiteContent";
 import { useReviews } from "../hooks/useReviews";
 import { useReels } from "../hooks/useReels";
+import { useAlsoFeatured } from "../hooks/useAlsoFeatured";
+import { useFeaturedPieces } from "../hooks/useFeaturedPieces";
 import { DiscountBanner } from "../components/ui/DiscountBanner";
 import heroVideoUrl from "../assets/hero-video.mp4?url";
-const boothAsset = { url: "/lattev-booth.png" };
+const boothAsset = { url: "/lattev-booth.webp" };
 const heroVideoAsset = { url: heroVideoUrl };
-const logoAsset = { url: "/lattev_transparent.png" };
+const logoAsset = { url: "/lattev_transparent.webp" };
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,14 +41,58 @@ function SplitText({ text, className }: { text: string; className?: string }) {
   );
 }
 
-// Self-hosted reel video player — pure autoplay, no Instagram UI
-// Clicking opens the Instagram reel in a new tab
+// Self-hosted reel video player — IntersectionObserver-driven autoplay.
+// preload="metadata" ensures enough data is buffered before .play() is called,
+// preventing the "play interrupted" error that shows a browser play button.
 function ReelVideo({ src, instagramUrl }: { src: string; instagramUrl: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const playingRef = useRef(false);
 
-  const handleMouseEnter = () => { setIsHovered(true); videoRef.current?.pause(); };
-  const handleMouseLeave = () => { setIsHovered(false); videoRef.current?.play(); };
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const tryPlay = () => {
+      if (playingRef.current) return;
+      // Ensure metadata is loaded before calling play()
+      const doPlay = () => {
+        playingRef.current = true;
+        video.play().catch(() => { playingRef.current = false; });
+      };
+      if (video.readyState >= 1) {
+        doPlay();
+      } else {
+        video.load();
+        video.addEventListener('loadedmetadata', doPlay, { once: true });
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          tryPlay();
+        } else {
+          video.pause();
+          playingRef.current = false;
+        }
+      },
+      { threshold: 0.25 }
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    videoRef.current?.pause();
+    playingRef.current = false;
+  };
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    videoRef.current?.play().catch(() => {});
+  };
 
   return (
     <a
@@ -65,10 +111,15 @@ function ReelVideo({ src, instagramUrl }: { src: string; instagramUrl: string })
         <video
           ref={videoRef}
           src={src}
-          autoPlay
           muted
           loop
           playsInline
+          preload="metadata"
+          disablePictureInPicture
+          // @ts-ignore
+          x-webkit-airplay="deny"
+          // @ts-ignore
+          disableRemotePlayback
           style={{
             position: "absolute",
             inset: 0,
@@ -78,13 +129,14 @@ function ReelVideo({ src, instagramUrl }: { src: string; instagramUrl: string })
             display: "block",
             transition: "filter 0.4s ease",
             filter: isHovered ? "brightness(0.65)" : "brightness(1)",
+            // Hint GPU compositor for smooth playback
+            willChange: "transform",
           }}
         />
         {/* Hover overlay */}
         {isHovered && (
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
             <div style={{ width: 52, height: 52, background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {/* Instagram icon */}
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                 <circle cx="12" cy="12" r="4"/>
@@ -93,7 +145,6 @@ function ReelVideo({ src, instagramUrl }: { src: string; instagramUrl: string })
             </div>
           </div>
         )}
-        {/* Bottom gradient */}
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to top, rgba(61,52,22,0.35), transparent)", pointerEvents: "none" }} />
       </div>
     </a>
@@ -113,6 +164,212 @@ function InstagramReels() {
 }
 
 
+// ── Also Featured On Section ──────────────────────────────────────
+function AlsoFeaturedSection({ content }: { content: Record<string, string | undefined> }) {
+  const { data: items = [] } = useAlsoFeatured();
+  if (items.length === 0) return null;
+
+  return (
+    <section className="also-featured-section">
+      <div className="also-featured-inner">
+        <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+          <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", opacity: 0.8, fontSize: "0.75rem", marginBottom: "0.5rem" }}>In the Spotlight</div>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: "clamp(2rem, 4vw, 3rem)", color: "var(--color-umber)", letterSpacing: "0.03em", margin: 0 }}>
+            {content.also_featured_heading || "Also Featured On"}
+          </h2>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.78rem", color: "var(--color-umber)", opacity: 0.5, marginTop: "0.75rem" }}>
+            {content.also_featured_subheading || "Spotted on real people, real moments"}
+          </p>
+        </div>
+        <div className="also-featured-cards">
+          {items.map((item) => (
+            <div key={item.id} className="also-featured-card">
+              {/* Left — Person photo + name + description */}
+              <div className="also-featured-person">
+                <div className="also-featured-photo-wrap">
+                  <img
+                    src={item.photo_url}
+                    alt={`${item.person_name} wearing Lattév Jouel`}
+                    loading="lazy"
+                    className="also-featured-photo"
+                  />
+                  <div className="also-featured-name-badge">
+                    <span className="also-featured-name">{item.person_name}</span>
+                    <span className="also-featured-desc">{item.description}</span>
+                  </div>
+                </div>
+              </div>
+              {/* Divider */}
+              <div className="also-featured-divider" aria-hidden="true">
+                <span className="also-featured-divider-dot" />
+                <span className="also-featured-divider-line" />
+                <span className="also-featured-divider-dot" />
+              </div>
+              {/* Right — Product */}
+              <div className="also-featured-product">
+                <div className="also-featured-product-img-wrap">
+                  {item.product_img && item.product_img.startsWith('http') ? (
+                    <img
+                      src={item.product_img}
+                      alt={item.product_name}
+                      loading="lazy"
+                      className="also-featured-product-img"
+                    />
+                  ) : (
+                    <div className="also-featured-product-img also-featured-product-img--placeholder">
+                      <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "0.8rem", color: "var(--color-gold)", opacity: 0.6 }}>Image coming soon</span>
+                    </div>
+                  )}
+                </div>
+                <div className="also-featured-product-info">
+                  <div className="uppercase tracking-luxe" style={{ color: "var(--color-gold)", fontSize: "0.65rem", marginBottom: "0.35rem" }}>The Piece</div>
+                  <div className="also-featured-product-name">{item.product_name}</div>
+                  {item.product_price && (
+                    <div className="also-featured-product-price">₹{item.product_price.toLocaleString('en-IN')}</div>
+                  )}
+                  {/* Link internally to the product page — never to external sites */}
+                  {item.product_id ? (
+                    <Link
+                      to="/product/$id"
+                      params={{ id: item.product_id }}
+                      className="also-featured-shop-btn"
+                    >
+                      View This Piece
+                    </Link>
+                  ) : item.product_name ? (
+                    <Link
+                      to="/shop"
+                      className="also-featured-shop-btn"
+                    >
+                      View This Piece
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Featured Pieces Slider ────────────────────────────────────────
+// Shows products that have featured=true set via the admin app.
+// Each card is a full-bleed image with name + price overlaid at the
+// bottom, and a "View Piece" CTA that slides up on hover.
+function FeaturedPiecesSection({ content }: { content: Record<string, string | undefined> }) {
+  const { data: pieces = [] } = useFeaturedPieces();
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef<{ x: number; scrollLeft: number } | null>(null);
+
+  if (pieces.length === 0) return null;
+
+  const scroll = (dir: "left" | "right") => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const cardW = (el.querySelector(".fp-card") as HTMLElement | null)?.offsetWidth ?? 280;
+    el.scrollBy({ left: dir === "left" ? -(cardW + 20) : (cardW + 20), behavior: "smooth" });
+  };
+
+  // Mouse drag-to-scroll
+  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = sliderRef.current;
+    if (!el) return;
+    dragStart.current = { x: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft };
+    setIsDragging(true);
+  };
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !dragStart.current || !sliderRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - sliderRef.current.offsetLeft;
+    const walk = (x - dragStart.current.x) * 1.5;
+    sliderRef.current.scrollLeft = dragStart.current.scrollLeft - walk;
+  };
+  const onMouseUp = () => { setIsDragging(false); dragStart.current = null; };
+
+  return (
+    <section className="featured-pieces-section">
+      <div className="featured-pieces-inner">
+        {/* Header row */}
+        <div className="fp-header">
+          <div>
+            <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", opacity: 0.8, fontSize: "0.72rem", marginBottom: "0.5rem" }}>Curated Edit</div>
+            <h2 className="fp-title">
+              {content.featured_pieces_heading || "Featured Pieces"}
+            </h2>
+            <p className="fp-subtitle">
+              {content.featured_pieces_subheading || "Curated favourites from the maison"}
+            </p>
+          </div>
+          {/* Nav arrows — desktop only */}
+          <div className="fp-nav hidden md:flex">
+            <button onClick={() => scroll("left")} className="fp-nav-btn" aria-label="Scroll left">
+              <ChevronLeft size={16} strokeWidth={1.5} />
+            </button>
+            <button onClick={() => scroll("right")} className="fp-nav-btn" aria-label="Scroll right">
+              <ChevronRight size={16} strokeWidth={1.5} />
+            </button>
+          </div>
+        </div>
+
+        {/* Slider track */}
+        <div
+          ref={sliderRef}
+          className="fp-slider"
+          style={{ userSelect: isDragging ? "none" : "auto" }}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+          onMouseLeave={onMouseUp}
+        >
+          {pieces.map((piece) => (
+            <Link
+              key={piece.id}
+              to="/product/$id"
+              params={{ id: piece.id }}
+              className="fp-card"
+            >
+              {/* Full-bleed image */}
+              <div className="fp-card-img-wrap">
+                {piece.img && piece.img.startsWith('http') ? (
+                  <img
+                    src={piece.img}
+                    alt={piece.name}
+                    loading="lazy"
+                    className="fp-card-img"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="fp-card-img fp-card-img--placeholder">
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "0.8rem", color: "var(--color-gold)", opacity: 0.55 }}>Image soon</span>
+                  </div>
+                )}
+                {/* Gradient overlay — always visible at bottom */}
+                <div className="fp-card-gradient" />
+                {/* Hover CTA */}
+                <div className="fp-card-hover-cta">View Piece →</div>
+              </div>
+              {/* Info strip below image */}
+              <div className="fp-card-info">
+                <div className="fp-card-name">{piece.name}</div>
+                {piece.price && (
+                  <div className="fp-card-price">₹{piece.price.toLocaleString('en-IN')}</div>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Mobile hint */}
+        <p className="fp-swipe-hint md:hidden">← Swipe to explore →</p>
+      </div>
+    </section>
+  );
+}
+
+
 function Index() {
   const heroRef = useRef<HTMLDivElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
@@ -127,130 +384,171 @@ function Index() {
   const { data: content } = useSiteContent();
   const { data: reviews = [] } = useReviews();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const safeContent: Record<string, string | undefined> = content ?? {};
+  const navigate = useNavigate();
 
-  // Trigger video play the moment the loading screen exits.
-  // This solves autoplay on iOS Safari and other restrictive browsers.
+  // Belt-and-suspenders video play strategy:
+  // 1. `autoPlay` attribute handles desktop browsers automatically.
+  // 2. This effect handles iOS Safari, which ignores `autoPlay` unless play()
+  //    is called imperatively from inside a user-gesture chain (the loading
+  //    screen tap provides that window).
   useEffect(() => {
-    if (!isAppReady || !heroVideoRef.current) return;
-    heroVideoRef.current.play().catch(() => {
-      // Autoplay still blocked — nothing we can do without a user gesture
-    });
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    // Already playing (autoPlay worked) — nothing to do
+    if (!video.paused) return;
+
+    const doPlay = () => {
+      video.play().catch(() => {
+        // Last resort: retry on first touch/click
+        const retry = () => {
+          video.play().catch(() => {});
+        };
+        document.addEventListener('touchstart', retry, { once: true, capture: true });
+        document.addEventListener('click', retry, { once: true, capture: true });
+      });
+    };
+
+    if (video.readyState >= 2) {
+      doPlay();
+    } else {
+      video.load();
+      video.addEventListener('canplay', doPlay, { once: true });
+    }
   }, [isAppReady]);
 
 
-  // GSAP + Lenis
+  // GSAP + Lenis — performance-optimised setup
   useEffect(() => {
-    let cleanup = () => { };
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    let cleanup = () => {};
     (async () => {
       const [{ default: gsap }, { ScrollTrigger }, { default: Lenis }] = await Promise.all([
-        import("gsap"),
-        import("gsap/ScrollTrigger"),
-        import("lenis"),
+        import('gsap'),
+        import('gsap/ScrollTrigger'),
+        import('lenis'),
       ]);
       gsap.registerPlugin(ScrollTrigger);
 
+      document.body.classList.add('gsap-ready');
+
+      // Connect Lenis to GSAP's ticker — eliminates the double-RAF loop
+      // that was causing jitter (manual raf fn + gsap internal ticker).
       const lenis = new Lenis({ duration: 1.2, smoothWheel: true });
-      function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-      requestAnimationFrame(raf);
-      lenis.on("scroll", ScrollTrigger.update);
+      gsap.ticker.add((time) => lenis.raf(time * 1000));
+      gsap.ticker.lagSmoothing(0); // prevent GSAP catching up after tab sleep
+      lenis.on('scroll', ScrollTrigger.update);
 
-      // Word reveals
-      gsap.utils.toArray<HTMLElement>("[data-word]").forEach((w) => {
-        gsap.fromTo(w, { yPercent: 110 }, {
-          yPercent: 0, duration: 1, ease: "expo.out",
-          scrollTrigger: { trigger: w, start: "top 90%" },
+      // Word reveals — skip on mobile to cut ScrollTrigger count by ~60%
+      if (!isMobile) {
+        gsap.utils.toArray<HTMLElement>('[data-word]').forEach((w) => {
+          gsap.fromTo(w, { yPercent: 110, opacity: 0 }, {
+            yPercent: 0, opacity: 1, duration: 1, ease: 'expo.out',
+            scrollTrigger: { trigger: w, start: 'top 90%' },
+          });
         });
-      });
+      } else {
+        // On mobile just make words visible immediately
+        document.querySelectorAll<HTMLElement>('[data-word]').forEach(w => {
+          w.style.opacity = '1';
+          w.style.transform = 'none';
+        });
+      }
 
-      // Hero parallax
-      if (heroTextRef.current) {
+      // Hero parallax — skip on mobile (causes jank with fixed-height 100vh)
+      if (!isMobile && heroTextRef.current) {
         gsap.to(heroTextRef.current, {
-          yPercent: -40, ease: "none",
-          scrollTrigger: { trigger: heroRef.current, start: "top top", end: "bottom top", scrub: true },
+          yPercent: -40, ease: 'none',
+          scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true },
         });
       }
 
       // Nav background on scroll
       ScrollTrigger.create({
-        trigger: heroRef.current, start: "bottom top",
-        onEnter: () => navRef.current?.classList.add("nav-solid"),
-        onLeaveBack: () => navRef.current?.classList.remove("nav-solid"),
+        trigger: heroRef.current, start: 'bottom top',
+        onEnter: () => navRef.current?.classList.add('nav-solid'),
+        onLeaveBack: () => navRef.current?.classList.remove('nav-solid'),
       });
-
-      // Product cards stagger
-      gsap.utils.toArray<HTMLElement>(".product-card").forEach((c, i) => {
-        gsap.fromTo(c, { opacity: 0, scale: 0.92, y: 30 }, {
-          opacity: 1, scale: 1, y: 0, duration: 1, ease: "power3.out", delay: (i % 3) * 0.08,
-          scrollTrigger: { trigger: c, start: "top 88%" },
-        });
-      });
-
-
-
 
       // Showcase scroll progress → drives 3D + panel crossfade
       if (showcaseRef.current) {
-        const dots = Array.from(document.querySelectorAll<HTMLElement>("[data-progress-dot]"));
-        const panels = Array.from(document.querySelectorAll<HTMLElement>("[data-panel]"));
+        const dots = Array.from(document.querySelectorAll<HTMLElement>('[data-progress-dot]'));
+        const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-panel]'));
         ScrollTrigger.create({
           trigger: showcaseRef.current,
-          start: "top top",
-          end: "bottom bottom",
+          start: 'top top',
+          end: 'bottom bottom',
           scrub: true,
           onUpdate: (self) => {
             (window as any).__lattevShowcaseScroll = self.progress;
             const idx = Math.min(panels.length - 1, Math.floor(self.progress * panels.length * 0.999));
-            panels.forEach((p, i) => p.classList.toggle("is-active", i === idx));
-            dots.forEach((d, i) => d.classList.toggle("on", i === idx));
+            panels.forEach((p, i) => p.classList.toggle('is-active', i === idx));
+            dots.forEach((d, i) => d.classList.toggle('on', i === idx));
           },
         });
       }
 
-
-      gsap.utils.toArray<HTMLElement>("[data-slide-left]").forEach((el) => {
+      gsap.utils.toArray<HTMLElement>('[data-slide-left]').forEach((el) => {
         gsap.fromTo(el, { x: -80, opacity: 0 }, {
-          x: 0, opacity: 1, duration: 1.4, ease: "expo.out",
-          scrollTrigger: { trigger: el, start: "top 80%" },
+          x: 0, opacity: 1, duration: 1.4, ease: 'expo.out',
+          scrollTrigger: { trigger: el, start: 'top 80%' },
         });
-        const curtains = el.querySelectorAll<HTMLElement>(".about-curtain");
+        const curtains = el.querySelectorAll<HTMLElement>('.about-curtain');
         if (curtains.length) {
           gsap.to(curtains, {
-            scaleY: 0, duration: 1.3, ease: "expo.inOut", stagger: 0.05,
-            scrollTrigger: { trigger: el, start: "top 75%" }
+            scaleY: 0, duration: 1.3, ease: 'expo.inOut', stagger: 0.05,
+            scrollTrigger: { trigger: el, start: 'top 75%' }
           });
         }
       });
-      gsap.utils.toArray<HTMLElement>("[data-fade-right]").forEach((el) => {
+      gsap.utils.toArray<HTMLElement>('[data-fade-right]').forEach((el) => {
         gsap.fromTo(el, { x: 60, opacity: 0 }, {
-          x: 0, opacity: 1, duration: 1.4, ease: "expo.out",
-          scrollTrigger: { trigger: el, start: "top 85%" },
+          x: 0, opacity: 1, duration: 1.4, ease: 'expo.out',
+          scrollTrigger: { trigger: el, start: 'top 85%' },
         });
       });
 
-
       cleanup = () => {
         ScrollTrigger.getAll().forEach((t) => t.kill());
+        gsap.ticker.remove((time) => lenis.raf(time * 1000));
         lenis.destroy();
+        document.body.classList.remove('gsap-ready');
       };
     })();
     return () => cleanup();
   }, []);
 
-  // Marquee
+  // Marquee — pauses when tab is hidden or element is off-screen
   useEffect(() => {
     if (!marqueeRef.current) return;
     const el = marqueeRef.current;
     let x = 0;
     let raf = 0;
+    let paused = false;
+
     const step = () => {
+      raf = requestAnimationFrame(step);
+      if (paused || document.hidden) return;
       x -= 0.5;
       const w = el.scrollWidth / 2;
       if (-x >= w) x = 0;
       el.style.transform = `translate3d(${x}px,0,0)`;
-      raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+
+    // Pause when marquee scrolls off-screen
+    const io = new IntersectionObserver(([e]) => { paused = !e.isIntersecting; });
+    io.observe(el);
+    // Pause when tab is hidden
+    const onVisibility = () => { paused = document.hidden; };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   const marqueeText = content?.marquee_text || "RINGS · BRACELETS · CUFFS · BANGLES · PENDANTS · EARRINGS · ";
@@ -273,6 +571,13 @@ function Index() {
           </div>
           <div className="flex flex-col gap-8 text-xl uppercase tracking-widest font-semibold" style={{ fontFamily: "'DM Sans', sans-serif" }}>
             <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)}>Collection</Link>
+            <button
+              type="button"
+              onClick={() => { setIsMobileMenuOpen(false); navigate({ to: "/search", search: { q: "" } }); }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", fontFamily: "inherit", fontSize: "inherit", fontWeight: "inherit", letterSpacing: "inherit", textAlign: "left", padding: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              Search
+            </button>
             <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
             <a href="#contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
             <Link to="/wishlist" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
@@ -335,6 +640,18 @@ function Index() {
 
 
           <div className="flex items-center gap-5 ml-auto md:ml-0" style={{ color: "var(--color-onyx)", filter: "drop-shadow(0px 1px 4px rgba(255,255,255,0.4))" }}>
+            {/* Search icon */}
+            <button
+              type="button"
+              className="cart-nav-link hidden md:flex"
+              aria-label="Search"
+              onClick={() => navigate({ to: "/search", search: { q: "" } })}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit" }}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ display: "block" }}>
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+            </button>
             {/* Wishlist icon */}
             <Link to="/wishlist" className="cart-nav-link" aria-label={`Wishlist (${wishlistCount})`}>
               <Heart size={17} strokeWidth={1.5} fill={wishlistCount > 0 ? "var(--color-gold)" : "none"} stroke="currentColor" style={{ display: "block" }} />
@@ -367,6 +684,12 @@ function Index() {
           loop
           playsInline
           preload="auto"
+          poster="/hero-poster.svg"
+          disablePictureInPicture
+          // @ts-ignore
+          x-webkit-airplay="deny"
+          // @ts-ignore
+          disableRemotePlayback
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
         />
         {/* Subtle gradient overlay so text reads clearly */}
@@ -431,7 +754,7 @@ function Index() {
         style={{ position: "relative", height: "200vh", background: "#E8B98A", borderBottom: "1px solid rgba(107,115,38,0.2)" }}
       >
         <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden" }}>
-          <Scene3D variant="showcase" />
+          <Scene3D variant="showcase" active={isAppReady} />
           {/* vignette to keep text readable */}
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 35%, rgba(240,213,180,0.85) 90%)", pointerEvents: "none" }} />
 
@@ -495,8 +818,59 @@ function Index() {
         </div>
       </section>
 
+      {/* Also Featured On */}
+      <AlsoFeaturedSection content={safeContent} />
+
+      {/* Featured Pieces Slider */}
+      <FeaturedPiecesSection content={safeContent} />
+
+      {/* ── A Note From the Founder ── */}
+      <section className="founder-letter-section">
+        <div className="founder-letter-inner">
+          {/* Eyebrow */}
+          <div className="uppercase tracking-luxe font-semibold founder-letter-eyebrow">
+            A Note From the Founder
+          </div>
+
+          {/* Pull quote */}
+          <blockquote className="founder-letter-quote">
+            "The right piece can completely change how you feel. It isn't about wearing more—it's about wearing something that feels like you."
+          </blockquote>
+
+          {/* Letter body */}
+          <div className="founder-letter-body">
+            <div className="founder-letter-col">
+              <p>Hi, I'm Lavanya, the founder of Lattév.</p>
+              <p>Lattév started with something very simple—I just really, really loved jewellery. I was the person who collected earrings, rings and necklaces like they were souvenirs. My collection kept growing because I loved finding pieces that felt different, and somehow, my friends always ended up borrowing my jewellery or asking me what would look good with a particular outfit.</p>
+              <p>During the lockdown, when I was just 16, I wondered whether people would actually pay for my taste in jewellery. So I bought just ten pieces as an experiment. The rest is history.</p>
+              <p>Like many small businesses, Lattév had to pause a few times while I focused on college. But every break only made me more certain that this is what I wanted to build. 2026 is the year Lattév is back—and this time, it's here to stay.</p>
+              <p>People often ask why I chose jewellery. The truth is, I never really chose it. Jewellery chose me.</p>
+            </div>
+            <div className="founder-letter-col">
+              <p>I've always believed that the right piece can completely change how you feel. It isn't about wearing more—it's about wearing something that feels like you.</p>
+              <p>When I started sourcing, I realised the market had two problems: everything looked the same, and styling advice had disappeared. Everyone was selling jewellery, but very few were helping people discover what actually suited their face, skin tone, personality or wardrobe. That's what I wanted Lattév to be—not just another jewellery store, but a place where someone could ask, <em>"What would look good on me?"</em> and get an honest answer.</p>
+              <p>Quality has always come before everything else. No matter how beautiful a design is, if the quality doesn't meet my standards, it doesn't become part of Lattév.</p>
+              <p>People often think Lattév is a French word. It's actually much more personal than that. The name comes from the initials of me and my sisters—<strong>L</strong>avanya, <strong>T</strong>ia and <strong>V</strong>edanshi. A little piece of my family has been part of this brand from day one.</p>
+              <p>The moments that make me proud aren't sales numbers. They're the customers who come back to our next pop-up wearing jewellery they bought from us months ago. Those conversations are my favourite part of this journey.</p>
+            </div>
+          </div>
+
+          {/* Closing line */}
+          <p className="founder-letter-closing">
+            At its heart, Lattév is about experimenting, embracing and owning who you are. My hope is that when you open a Lattév box, you don't just see jewellery—you see a little extension of yourself. Something that feels like it already belonged to you before you even wore it.
+          </p>
+          <p className="founder-letter-thanks">Thank you for being here. I'm so glad you found us.</p>
+
+          {/* Signature */}
+          <div className="founder-letter-sig">
+            <span className="founder-letter-sig-name">— Lavanya</span>
+            <span className="founder-letter-sig-title">Founder, Lattév Jouel</span>
+          </div>
+        </div>
+      </section>
 
       {/* About */}
+
       <section id="about" style={{ background: "var(--background)", color: "var(--foreground)" }}>
         <div className="grid md:grid-cols-2 gap-0 items-stretch min-h-screen">
           <div data-slide-left className="overflow-hidden relative" style={{ minHeight: "60vh" }}>

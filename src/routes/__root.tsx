@@ -16,6 +16,7 @@ import { AppReadyProvider } from "../context/AppReadyContext";
 import { WishlistProvider } from "../context/WishlistContext";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { Toaster } from "../components/ui/sonner";
+import { WhatsAppFloat } from "../components/ui/WhatsAppFloat";
 
 function NotFoundComponent() {
   return (
@@ -86,9 +87,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Lattév Jouel — Fine Contemporary Jewellery" },
       { property: "og:description", content: "Crafted for the bold. Made to be worn." },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "/lattev_transparent.png" },
+      { property: "og:image", content: "https://lattevjouel.com/lattev_transparent.webp" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "/lattev_transparent.png" },
+      { name: "twitter:image", content: "https://lattevjouel.com/lattev_transparent.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -136,6 +139,8 @@ function RootComponent() {
             {/* Loading screen — shows on initial visit, auto-dismisses after 3s */}
             <LoadingScreen />
             <Toaster />
+            {/* Global WhatsApp CTA — visible on all pages */}
+            <WhatsAppFloat />
             {/* Required: nested routes render here */}
             <Outlet />
           </CartProvider>

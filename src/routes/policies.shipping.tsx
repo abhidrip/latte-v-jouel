@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-const logoAsset = { url: "/lattev_transparent.png" };
+const logoAsset = { url: "/lattev_transparent.webp" };
 
 export const Route = createFileRoute("/policies/shipping")({
   head: () => ({

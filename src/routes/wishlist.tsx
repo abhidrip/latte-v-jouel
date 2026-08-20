@@ -3,7 +3,7 @@ import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
 import { Heart, ShoppingBag, ArrowLeft } from "lucide-react";
 
-const logoAsset = { url: "/lattev_transparent.png" };
+const logoAsset = { url: "/lattev_transparent.webp" };
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({

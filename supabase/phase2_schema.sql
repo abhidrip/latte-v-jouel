@@ -1,74 +1,76 @@
--- ============================================================
--- Phase 2 Schema: Banner + Reviews Tables
--- Run this in your Supabase SQL Editor
--- ============================================================
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Phase 2 Schema Migration — Product Experience
+-- Run this in your Supabase SQL editor
+-- ═══════════════════════════════════════════════════════════════════════════
 
--- ── Banner Table ─────────────────────────────────────────────
--- Single-row table for site-wide discount/announcement banner.
--- Admin app: toggle enabled, edit text and optional CTA link.
+-- 1. Add new columns to products table
+-- (uses IF NOT EXISTS guards so it's safe to run more than once)
 
-CREATE TABLE IF NOT EXISTS banner (
-  id INT PRIMARY KEY DEFAULT 1,
-  enabled BOOLEAN DEFAULT FALSE,
-  text TEXT DEFAULT '🎉 New collection just dropped — DM us to order',
-  link TEXT DEFAULT '',
-  link_label TEXT DEFAULT 'Shop Now',
-  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS description TEXT,
+  ADD COLUMN IF NOT EXISTS material TEXT,
+  ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS sizes TEXT[] DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS featured_in_search BOOLEAN DEFAULT TRUE;
+
+-- 2. Product images table — supports multiple images per product with ordering
+CREATE TABLE IF NOT EXISTS product_images (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  url        TEXT NOT NULL,
+  alt        TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,  -- 0 = primary / gallery order
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Add missing column if the table already existed from a previous run
-ALTER TABLE banner ADD COLUMN IF NOT EXISTS link_label TEXT DEFAULT 'Shop Now';
+-- Enable RLS
+ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
 
--- Enforce single row
-CREATE UNIQUE INDEX IF NOT EXISTS banner_single_row ON banner (id);
+DROP POLICY IF EXISTS "Public read product_images" ON product_images;
+CREATE POLICY "Public read product_images"
+  ON product_images FOR SELECT USING (true);
 
--- RLS
-ALTER TABLE banner ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Auth write product_images" ON product_images;
+CREATE POLICY "Auth write product_images"
+  ON product_images FOR ALL TO authenticated
+  USING (true) WITH CHECK (true);
 
-CREATE POLICY "Allow public read access to banner"
-  ON banner FOR SELECT
-  USING (true);
+-- Index for fast per-product lookups (the most common query)
+CREATE INDEX IF NOT EXISTS idx_product_images_product_id
+  ON product_images (product_id, sort_order);
 
-CREATE POLICY "Allow authenticated full access to banner"
-  ON banner FOR ALL
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
+-- 3. Back-fill existing single images into product_images
+--    Only inserts rows that don't already exist (idempotent)
+INSERT INTO product_images (product_id, url, alt, sort_order)
+SELECT
+  p.id,
+  p.img,
+  p.name,
+  0
+FROM products p
+WHERE p.img IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM product_images pi WHERE pi.product_id = p.id AND pi.sort_order = 0
+  );
 
--- Seed default row
-INSERT INTO banner (id, enabled, text, link, link_label)
-VALUES (1, FALSE, '🎉 New collection just dropped — DM us to order', '', 'Shop Now')
-ON CONFLICT (id) DO NOTHING;
-
--- ── Reviews Table ─────────────────────────────────────────────
--- Stores customer review screenshots and names.
--- Admin app: upload image to Storage → paste URL, enter name, set order.
-
-CREATE TABLE IF NOT EXISTS reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  customer_name TEXT NOT NULL,
-  screenshot_url TEXT NOT NULL,
-  display_order INT DEFAULT 0,
-  visible BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
-);
-
--- RLS
-ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Allow public read access to reviews"
-  ON reviews FOR SELECT
-  USING (true);
-
-CREATE POLICY "Allow authenticated full access to reviews"
-  ON reviews FOR ALL
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
--- ── site_content additions ─────────────────────────────────────
--- New keys for the reviews section heading (editable from admin app)
-INSERT INTO site_content (key, value) VALUES
-  ('reviews_heading', 'What they''re saying'),
-  ('reviews_subheading', 'Real customers, real love')
-ON CONFLICT (key) DO NOTHING;
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Admin prompt (add to your AI Studio admin app):
+-- ═══════════════════════════════════════════════════════════════════════════
+-- "Add a Product Images section to the product edit page.
+--  Allow uploading multiple images per product (up to 6).
+--  Images should be stored in the product_images table with columns:
+--  product_id (UUID), url (TEXT), alt (TEXT), sort_order (INTEGER).
+--  Show a drag-to-reorder thumbnail strip. The image with sort_order=0
+--  is the primary image shown in the shop grid.
+--
+--  Also add these fields to the product edit form:
+--  - description (TEXT, multiline textarea)
+--  - material (TEXT, e.g. 'Gold-plated brass', 'Sterling silver')
+--  - stock (INTEGER, nullable — null means 'contact for availability')
+--  - sizes (TEXT array, comma-separated input, e.g. '6,7,8,9,10,11,12')
+--
+--  In the products list table, add a Stock column showing:
+--  - a green dot for stock > 3
+--  - an orange dot for stock 1-3 ('Low Stock')
+--  - a red dot for stock = 0 or sold = true ('Sold Out')
+--  - a grey dash for stock = null"

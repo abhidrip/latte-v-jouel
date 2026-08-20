@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
@@ -7,7 +7,7 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { DiscountBanner } from "../components/ui/DiscountBanner";
 import { Heart } from "lucide-react";
-const logoAsset = { url: "/lattev_transparent.png" };
+const logoAsset = { url: "/lattev_transparent.webp" };
 
 const CATEGORIES = ["all", "rings", "cuffs", "bangles", "bracelets", "pendants"] as const;
 type Category = (typeof CATEGORIES)[number];
@@ -74,15 +74,16 @@ function ShopPage() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const { addItem, count } = useCart();
   const { count: wishlistCount } = useWishlist();
+  const navigate = useNavigate();
 
-  const { data: allProducts = [] } = useQuery({
+  const { data: allProducts = [], isLoading, isError } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      if (!supabase.supabaseUrl) return []; // Fallback if no keys
+      if (!supabase.supabaseUrl) return [];
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: true });
       if (error) {
         console.error("Supabase fetch error:", error);
-        return [];
+        throw error; // let isError flag it
       }
       return data as Product[];
     }
@@ -118,7 +119,12 @@ function ShopPage() {
   }, [category]);
 
   return (
-    <div ref={sectionRef} style={{ background: "#E8B98A", color: "var(--foreground)", minHeight: "100vh" }}>
+    <div style={{ background: "var(--background)", color: "var(--foreground)", minHeight: "100vh" }}>
+      {isError && (
+        <div style={{ background: "rgba(107,115,38,0.08)", borderBottom: "1px solid rgba(107,115,38,0.2)", padding: "0.75rem 2rem", textAlign: "center", fontFamily: "'DM Sans', sans-serif", fontSize: "0.78rem", color: "var(--color-umber)", opacity: 0.7 }}>
+          ⚠ We're having trouble connecting right now. Please refresh in a moment.
+        </div>
+      )}
       {/* Nav */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, background: "rgba(232,185,138,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(201,169,110,0.3)" }}>
         {/* Banner sits at the very top of the fixed nav — avoids overlap */}
@@ -146,6 +152,18 @@ function ShopPage() {
               </div>
             </div>
             <a href="https://instagram.com/lattevjouel" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">@lattevjouel</a>
+            {/* Search icon */}
+            <button
+              type="button"
+              className="cart-nav-link"
+              aria-label="Search"
+              onClick={() => navigate({ to: "/search", search: { q: "" } })}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit" }}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ display: "block" }}>
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+            </button>
             {/* Wishlist icon */}
             <Link to="/wishlist" className="cart-nav-link" aria-label={`Wishlist (${wishlistCount})`} style={{ position: "relative" }}>
               <Heart size={17} strokeWidth={1.5} fill={wishlistCount > 0 ? "var(--color-gold)" : "none"} stroke="currentColor" style={{ display: "block" }} />
