@@ -915,11 +915,7 @@ function Index() {
                 letterSpacing: "0.03em",
               }}
             >
-              {content?.showcase_1_title &&
-              content.showcase_1_title !== "HEHEHAHA" &&
-              content.showcase_1_title !== "Sculpted in light."
-                ? content.showcase_1_title
-                : "Lattev"}
+              Lattev
             </h2>
           </div>
 
@@ -934,11 +930,7 @@ function Index() {
                 letterSpacing: "0.02em",
               }}
             >
-              {content?.showcase_2_title &&
-              content.showcase_2_title !== "Circles that <span style=\"color: var(--color-gold)\">spiral</span><br /> into devotion." &&
-              content.showcase_2_title !== "Circles that spiral into devotion."
-                ? content.showcase_2_title
-                : "The Art of Adorning"}
+              The Art of Adorning
             </h2>
           </div>
 
@@ -953,10 +945,7 @@ function Index() {
                 letterSpacing: "0.02em",
               }}
             >
-              {content?.showcase_3_title &&
-              !content.showcase_3_title.includes("awakened")
-                ? content.showcase_3_title
-                : "Adorn your everyday"}
+              Adorn your everyday
             </h2>
             <Link to="/shop" className="liquid-glass-btn mt-8" style={{ pointerEvents: "auto" }}>Enter the Boutique</Link>
           </div>
