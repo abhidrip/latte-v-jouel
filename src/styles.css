@@ -2894,3 +2894,93 @@ body {
 .luxe-skeleton__block { background: #111109; animation: skeletonPulse 1.8s ease-in-out infinite; }
 .luxe-skeleton__block:nth-child(2) { animation-delay: 0.15s; }
 .luxe-skeleton__block:nth-child(3) { animation-delay: 0.3s; }
+
+/* ── Luxe Shop Layout (simplified shop-style layout with luxe theme) ─────── */
+
+.luxe-page .luxe-shop-header {
+  text-align: center;
+  padding: 10rem 1.5rem 4rem;
+  background: var(--luxe-bg);
+  border-bottom: 1px solid var(--luxe-gold-border);
+}
+
+.luxe-page .luxe-shop-headline {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(2.8rem, 7vw, 6rem);
+  line-height: 1;
+  color: var(--luxe-text);
+  margin: 1rem 0 0;
+}
+
+.luxe-page .luxe-shop-headline em {
+  font-style: italic;
+  color: var(--luxe-gold);
+}
+
+.luxe-page .luxe-shop-tagline {
+  margin-top: 1.5rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--luxe-gold);
+  opacity: 0.7;
+}
+
+.luxe-page .luxe-shop-section {
+  padding: 5rem 1.5rem 8rem;
+  background: var(--luxe-bg);
+}
+
+.luxe-page .luxe-shop-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.luxe-page .luxe-shop-loading {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+@media (min-width: 1024px) {
+  .luxe-page .luxe-shop-loading { grid-template-columns: repeat(3, 1fr); }
+}
+.luxe-page .luxe-shop-skeleton {
+  aspect-ratio: 3/4;
+  background: var(--luxe-surface);
+  border-radius: 4px;
+  animation: skeletonPulse 1.8s ease-in-out infinite;
+}
+
+.luxe-page .luxe-empty-state {
+  text-align: center;
+  padding: 6rem 2rem;
+}
+.luxe-page .luxe-empty-state__text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--luxe-text);
+  margin: 0 0 1rem;
+}
+.luxe-page .luxe-empty-state__sub {
+  font-size: 0.9rem;
+  color: var(--luxe-text-dim);
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.8;
+}
+
+.luxe-page .lg-card {
+  background: var(--luxe-surface) !important;
+  border: 1px solid var(--luxe-gold-border) !important;
+}
+.luxe-page .lg-card__name {
+  color: var(--luxe-text) !important;
+  font-family: 'Cormorant Garamond', serif;
+}
+.luxe-page .lg-card__price { color: var(--luxe-gold) !important; }
+.luxe-page .lg-card__cta { color: var(--luxe-gold) !important; }
+.luxe-page .lg-card__placeholder { background: var(--luxe-surface-2) !important; }
