@@ -694,6 +694,7 @@ function Index() {
             </button>
             <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
             <a href="#contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
+            <Link to="/luxe" onClick={() => setIsMobileMenuOpen(false)} style={{ color: "#C9A96E", fontStyle: "italic" }}>Luxe ✦</Link>
             <Link to="/wishlist" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
               Wishlist
               {wishlistCount > 0 && (
@@ -750,6 +751,7 @@ function Index() {
             </div>
             <a href="#about" className="hover:text-[var(--color-gold)] transition-colors story-link">About</a>
             <a href="#contact" className="hover:text-[var(--color-gold)] transition-colors story-link">Contact</a>
+            <Link to="/luxe" className="story-link" style={{ color: "var(--color-gold)", fontStyle: "italic", letterSpacing: "0.12em" }}>Luxe ✦</Link>
           </div>
 
 

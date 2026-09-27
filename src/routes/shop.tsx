@@ -154,6 +154,7 @@ function ShopPage() {
               </div>
             </div>
             <a href="https://instagram.com/lattevjouel" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">@lattevjouel</a>
+            <Link to="/luxe" style={{ color: "var(--color-gold)", fontStyle: "italic", letterSpacing: "0.12em" }}>Luxe ✦</Link>
             {/* Search icon */}
             <button
               type="button"
