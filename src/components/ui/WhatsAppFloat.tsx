@@ -2,16 +2,13 @@
 // Pre-fills the WhatsApp chat with a greeting so the customer
 // just hits send rather than typing from scratch.
 
-export function WhatsAppFloat() {
-  const message = encodeURIComponent(
-    "Hi Lavanya! I found Lattév Jouel online and I have a question 😊"
-  );
-  const phone = "918077762221"; // +91 country code, no spaces or dashes
+import { WHATSAPP_URL } from "../../lib/constants";
 
+export function WhatsAppFloat() {
   return (
     <a
       id="whatsapp-float"
-      href={`https://wa.me/${phone}?text=${message}`}
+      href={WHATSAPP_URL.general}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with Lattév Jouel on WhatsApp"

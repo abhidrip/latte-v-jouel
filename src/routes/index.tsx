@@ -11,7 +11,9 @@ import { useReviews } from "../hooks/useReviews";
 import { useReels } from "../hooks/useReels";
 import { useAlsoFeatured } from "../hooks/useAlsoFeatured";
 import { useFeaturedPieces } from "../hooks/useFeaturedPieces";
+import { useLuxuryPieces } from "../hooks/useLuxuryPieces";
 import { DiscountBanner } from "../components/ui/DiscountBanner";
+import { WHATSAPP_URL, CATEGORY_LABEL } from "../lib/constants";
 import heroVideoUrl from "../assets/hero-video.mp4?url";
 const boothAsset = { url: "/lattev-booth.webp" };
 const heroVideoAsset = { url: heroVideoUrl };
@@ -370,6 +372,103 @@ function FeaturedPiecesSection({ content }: { content: Record<string, string | u
 }
 
 
+// ── Luxury Section ────────────────────────────────────────────────────
+// Premium editorial-style showcase for luxury-flagged products.
+// Full-width cards with cinematic imagery and glassmorphism info overlay.
+function LuxurySection({ content }: { content: Record<string, string | undefined> }) {
+  const { data: pieces = [] } = useLuxuryPieces();
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  if (pieces.length === 0) return null;
+
+  const scroll = (dir: "left" | "right") => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const cardW = (el.querySelector(".luxury-card") as HTMLElement | null)?.offsetWidth ?? 400;
+    el.scrollBy({ left: dir === "left" ? -(cardW + 24) : (cardW + 24), behavior: "smooth" });
+  };
+
+  return (
+    <section className="luxury-section">
+      <div className="luxury-inner">
+        {/* Header */}
+        <div className="luxury-header">
+          <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", opacity: 0.8, fontSize: "0.72rem", marginBottom: "0.5rem" }}>
+            {content.luxury_kicker || "Maison Sélection"}
+          </div>
+          <h2 className="luxury-title font-display">
+            {content.luxury_heading || "The Luxury Edit"}
+          </h2>
+          <p className="luxury-subtitle">
+            {content.luxury_subheading || "Extraordinary pieces for extraordinary moments"}
+          </p>
+        </div>
+
+        {/* Navigation arrows */}
+        <div className="luxury-nav hidden md:flex">
+          <button onClick={() => scroll("left")} className="luxury-nav-btn" aria-label="Scroll left">
+            <ChevronLeft size={18} strokeWidth={1.5} />
+          </button>
+          <button onClick={() => scroll("right")} className="luxury-nav-btn" aria-label="Scroll right">
+            <ChevronRight size={18} strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Cards */}
+        <div ref={sliderRef} className="luxury-slider">
+          {pieces.map((piece) => (
+            <Link
+              key={piece.id}
+              to="/product/$id"
+              params={{ id: piece.id }}
+              className="luxury-card"
+            >
+              <div className="luxury-card-img-wrap">
+                {piece.img && piece.img.startsWith('http') ? (
+                  <img
+                    src={piece.img}
+                    alt={piece.name}
+                    loading="lazy"
+                    className="luxury-card-img"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="luxury-card-img luxury-card-img--placeholder">
+                    <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "0.9rem", color: "var(--color-gold)", opacity: 0.5 }}>Image soon</span>
+                  </div>
+                )}
+                {/* Gradient overlay */}
+                <div className="luxury-card-gradient" />
+                {/* Info overlay */}
+                <div className="luxury-card-info">
+                  <div className="luxury-card-category">{piece.category}</div>
+                  <div className="luxury-card-name">{piece.name}</div>
+                  {piece.material && (
+                    <div className="luxury-card-material">{piece.material}</div>
+                  )}
+                  {piece.price && (
+                    <div className="luxury-card-price">
+                      ₹{piece.price.toLocaleString('en-IN')}
+                      {piece.was && (
+                        <span className="luxury-card-was">₹{piece.was.toLocaleString('en-IN')}</span>
+                      )}
+                    </div>
+                  )}
+                  <span className="luxury-card-cta">Discover →</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Mobile hint */}
+        <p className="luxury-swipe-hint md:hidden">← Swipe to explore →</p>
+      </div>
+    </section>
+  );
+}
+
+
 function Index() {
   const heroRef = useRef<HTMLDivElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
@@ -436,7 +535,8 @@ function Index() {
       // Connect Lenis to GSAP's ticker — eliminates the double-RAF loop
       // that was causing jitter (manual raf fn + gsap internal ticker).
       const lenis = new Lenis({ duration: 1.2, smoothWheel: true });
-      gsap.ticker.add((time) => lenis.raf(time * 1000));
+      const lenisTickerCb = (time: number) => lenis.raf(time * 1000);
+      gsap.ticker.add(lenisTickerCb);
       gsap.ticker.lagSmoothing(0); // prevent GSAP catching up after tab sleep
       lenis.on('scroll', ScrollTrigger.update);
 
@@ -511,7 +611,7 @@ function Index() {
 
       cleanup = () => {
         ScrollTrigger.getAll().forEach((t) => t.kill());
-        gsap.ticker.remove((time) => lenis.raf(time * 1000));
+        gsap.ticker.remove(lenisTickerCb);
         lenis.destroy();
         document.body.classList.remove('gsap-ready');
       };
@@ -571,6 +671,20 @@ function Index() {
           </div>
           <div className="flex flex-col gap-8 text-xl uppercase tracking-widest font-semibold" style={{ fontFamily: "'DM Sans', sans-serif" }}>
             <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)}>Collection</Link>
+            {/* Category sub-links */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", paddingLeft: "1rem", marginTop: "-0.5rem" }}>
+              {(["rings", "cuffs", "bangles", "bracelets", "pendants"] as const).map((cat) => (
+                <Link
+                  key={cat}
+                  to="/shop"
+                  search={{ category: cat }}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  style={{ fontSize: "0.85rem", letterSpacing: "0.12em", opacity: 0.65, fontWeight: 500 }}
+                >
+                  {CATEGORY_LABEL[cat]}
+                </Link>
+              ))}
+            </div>
             <button
               type="button"
               onClick={() => { setIsMobileMenuOpen(false); navigate({ to: "/search", search: { q: "" } }); }}
@@ -824,6 +938,9 @@ function Index() {
       {/* Featured Pieces Slider */}
       <FeaturedPiecesSection content={safeContent} />
 
+      {/* ── Luxury Section ── */}
+      <LuxurySection content={safeContent} />
+
       {/* ── A Note From the Founder ── */}
       <section className="founder-letter-section">
         <div className="founder-letter-inner">
@@ -938,6 +1055,18 @@ function Index() {
               ))}
             </div>
           </div>
+          {/* Share your experience CTA */}
+          <div style={{ textAlign: "center", marginTop: "3rem" }}>
+            <a
+              href={WHATSAPP_URL.review}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="liquid-glass-btn"
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              Share Your Experience
+            </a>
+          </div>
         </section>
       )}
 
@@ -954,6 +1083,8 @@ function Index() {
               <li><Link to="/shop" className="hover:text-[var(--color-gold)] transition-colors">Collection</Link></li>
               <li><a href="#about" className="hover:text-[var(--color-gold)] transition-colors">About</a></li>
               <li><a href="#contact" className="hover:text-[var(--color-gold)] transition-colors">Contact</a></li>
+              <li><Link to="/wishlist" className="hover:text-[var(--color-gold)] transition-colors">Wishlist</Link></li>
+              <li><Link to="/search" search={{ q: "" }} className="hover:text-[var(--color-gold)] transition-colors">Search</Link></li>
             </ul>
           </div>
           <div>

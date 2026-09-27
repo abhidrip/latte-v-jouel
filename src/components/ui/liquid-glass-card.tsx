@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useWishlist } from "../../context/WishlistContext";
 
 interface LiquidGlassCardProps {
   href?: string;
   productId?: string;
   img?: string;
+  /** Optional secondary image shown on hover for a luxury crossfade effect */
+  secondaryImg?: string;
   name: string;
   price?: number;
   was?: number;
@@ -18,6 +21,7 @@ export const LiquidGlassCard: React.FC<LiquidGlassCardProps> = ({
   href,
   productId,
   img,
+  secondaryImg,
   name,
   price,
   was,
@@ -27,6 +31,7 @@ export const LiquidGlassCard: React.FC<LiquidGlassCardProps> = ({
 }) => {
   const { isWishlisted, toggleWishlist } = useWishlist();
   const wishlisted = productId ? isWishlisted(productId) : false;
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -36,13 +41,32 @@ export const LiquidGlassCard: React.FC<LiquidGlassCardProps> = ({
   };
 
   const inner = (
-    <div className="lg-card">
+    <div
+      className="lg-card"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="lg-card__glow" />
       <div className="lg-card__sheen" />
       <div className="lg-card__border" />
       <div className="lg-card__media">
         {img ? (
-          <img src={img} alt={name} loading="lazy" />
+          <div className="lg-card__img-stack">
+            <img
+              src={img}
+              alt={name}
+              loading="lazy"
+              className={`lg-card__img-primary${secondaryImg && isHovered ? " lg-card__img--hidden" : ""}`}
+            />
+            {secondaryImg && (
+              <img
+                src={secondaryImg}
+                alt={`${name} — alternate view`}
+                loading="lazy"
+                className={`lg-card__img-secondary${isHovered ? " lg-card__img--visible" : ""}`}
+              />
+            )}
+          </div>
         ) : (
           <div className="lg-card__placeholder" />
         )}
@@ -121,12 +145,14 @@ export const LiquidGlassCard: React.FC<LiquidGlassCardProps> = ({
       </div>
     </div>
   );
+
+  // Use TanStack Router <Link> for internal navigation — avoids full page reloads
   if (!sold) {
     if (productId) {
       return (
-        <a href={`/product/${productId}`} className="lg-card__link">
+        <Link to="/product/$id" params={{ id: productId }} className="lg-card__link">
           {inner}
-        </a>
+        </Link>
       );
     }
     if (href) {

@@ -6,6 +6,7 @@ import { LiquidGlassCard } from "../components/ui/liquid-glass-card";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { DiscountBanner } from "../components/ui/DiscountBanner";
+import { useProductSecondaryImages } from "../hooks/useProductSecondaryImages";
 import { Heart } from "lucide-react";
 const logoAsset = { url: "/lattev_transparent.webp" };
 
@@ -75,6 +76,7 @@ function ShopPage() {
   const { addItem, count } = useCart();
   const { count: wishlistCount } = useWishlist();
   const navigate = useNavigate();
+  const { data: secondaryImagesMap } = useProductSecondaryImages();
 
   const { data: allProducts = [], isLoading, isError } = useQuery({
     queryKey: ['products'],
@@ -228,6 +230,7 @@ function ShopPage() {
                       key={p.name}
                       {...p}
                       productId={p.id}
+                      secondaryImg={secondaryImagesMap?.get(p.id)}
                       onAddToCart={p.price && !p.sold ? () => addItem({ name: p.name, price: p.price!, img: p.img, href: `/product/${p.id}` }) : undefined}
                     />
                   ))}
@@ -250,6 +253,7 @@ function ShopPage() {
                         key={p.name}
                         {...p}
                         productId={p.id}
+                        secondaryImg={secondaryImagesMap?.get(p.id)}
                         onAddToCart={p.price && !p.sold ? () => addItem({ name: p.name, price: p.price!, img: p.img, href: `/product/${p.id}` }) : undefined}
                       />
                     ))}
@@ -261,16 +265,36 @@ function ShopPage() {
         </div>
       </section>
 
-      <footer style={{ background: "#E8B98A", color: "var(--color-umber)", padding: "4rem 1.5rem 2rem", borderTop: "1px solid rgba(201,169,110,0.2)", textAlign: "center" }}>
-        <img src={logoAsset.url} alt="Lattév Jouel" style={{ height: 84, width: "auto", margin: "0 auto", display: "block" }} />
-        <p className="mt-4 text-sm opacity-70">DM <a className="underline" href="https://instagram.com/lattevjouel" target="_blank" rel="noopener noreferrer">@lattevjouel</a> to order</p>
+      <footer style={{ background: "#E8B98A", color: "var(--color-umber)", padding: "4rem 1.5rem 2rem", borderTop: "1px solid rgba(201,169,110,0.2)" }}>
+        <div className="max-w-5xl mx-auto" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "2rem", textAlign: "center" }}>
+          <div>
+            <img src={logoAsset.url} alt="Lattév Jouel" style={{ height: 64, width: "auto", margin: "0 auto", display: "block" }} />
+            <p className="mt-3 text-sm opacity-70" style={{ maxWidth: 200, margin: "0.75rem auto 0" }}>Fine contemporary jewellery. Handcrafted in India.</p>
+          </div>
+          <div>
+            <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.72rem", marginBottom: "1rem" }}>Navigate</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.82rem" }}>
+              <Link to="/" className="hover:text-[var(--color-gold)] transition-colors">Home</Link>
+              <Link to="/shop" search={{ category: "all" }} className="hover:text-[var(--color-gold)] transition-colors">Collection</Link>
+              <Link to="/wishlist" className="hover:text-[var(--color-gold)] transition-colors">Wishlist</Link>
+              <Link to="/cart" className="hover:text-[var(--color-gold)] transition-colors">Cart</Link>
+            </div>
+          </div>
+          <div>
+            <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.72rem", marginBottom: "1rem" }}>Connect</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.82rem" }}>
+              <a href="https://instagram.com/lattevjouel" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-gold)] transition-colors">@lattevjouel</a>
+              <a href="mailto:lavanyapahwa717@gmail.com" className="hover:text-[var(--color-gold)] transition-colors">Email Us</a>
+            </div>
+          </div>
+        </div>
         {/* Policy links */}
         <div style={{ marginTop: "2rem", display: "flex", justifyContent: "center", gap: "1.5rem", flexWrap: "wrap", fontFamily: "'DM Sans', sans-serif", fontSize: "0.68rem", letterSpacing: "0.12em", textTransform: "uppercase", opacity: 0.55 }}>
           <Link to="/policies/shipping" style={{ color: "inherit", textDecoration: "none" }}>Shipping</Link>
           <Link to="/policies/returns" style={{ color: "inherit", textDecoration: "none" }}>Returns</Link>
           <Link to="/policies/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms & FAQs</Link>
         </div>
-        <div className="mt-6 text-[0.65rem] tracking-wider-luxe uppercase opacity-60">© {new Date().getFullYear()} Lattév Jouel</div>
+        <div className="mt-6 text-[0.65rem] tracking-wider-luxe uppercase opacity-60" style={{ textAlign: "center" }}>© {new Date().getFullYear()} Lattév Jouel. All pieces handcrafted in India.</div>
       </footer>
     </div>
   );

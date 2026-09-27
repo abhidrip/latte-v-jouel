@@ -2,9 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useProductImages } from "../hooks/useProductImages";
 import { useRelatedProducts } from "../hooks/useRelatedProducts";
+import { WHATSAPP_URL, CATEGORY_LABEL } from "../lib/constants";
+import { Heart } from "lucide-react";
 
 export const Route = createFileRoute("/product/$id")({
   head: () => ({
@@ -33,7 +36,7 @@ type Product = {
 function ProductSkeleton() {
   return (
     <div style={{ background: "var(--background)", minHeight: "100vh", paddingTop: "6rem" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "calc(100vh - 6rem)" }}>
+      <div className="product-layout" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "calc(100vh - 6rem)" }}>
         <div style={{ background: "rgba(232,185,138,0.3)", minHeight: "50vh", animation: "skeletonPulse 1.5s ease-in-out infinite" }} />
         <div style={{ padding: "4rem 3rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           {[80, "70%", 100, 120, "auto"].map((w, i) => (
@@ -98,13 +101,37 @@ function ImageGallery({ images, productName }: { images: string[]; productName: 
     );
   }
 
+  // Zoom state
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") prev();
+      else if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [prev, next]);
+
   return (
     <div style={{ position: "sticky", top: "5.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-      {/* Main image */}
+      {/* Main image with zoom */}
       <div
-        style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden", background: "var(--background)", cursor: images.length > 1 ? "grab" : "default" }}
+        style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden", background: "var(--background)", cursor: isZoomed ? "zoom-out" : images.length > 0 ? "zoom-in" : "default" }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
+        onClick={() => setIsZoomed(z => !z)}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setIsZoomed(false)}
       >
         <img
           key={active}
@@ -112,26 +139,41 @@ function ImageGallery({ images, productName }: { images: string[]; productName: 
           alt={`${productName} — view ${active + 1}`}
           width={800}
           height={1000}
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", animation: "galleryFade 0.3s ease" }}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+            animation: "galleryFade 0.3s ease",
+            transition: "transform 0.3s ease",
+            transform: isZoomed ? "scale(2)" : "scale(1)",
+            transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+          }}
         />
         {/* Prev/next chevrons — only when > 1 image */}
-        {images.length > 1 && (
+        {images.length > 1 && !isZoomed && (
           <>
             <button
               aria-label="Previous image"
-              onClick={prev}
+              onClick={(e) => { e.stopPropagation(); prev(); }}
               style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(255,248,230,0.85)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", zIndex: 2 }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 18l-6-6 6-6" /></svg>
             </button>
             <button
               aria-label="Next image"
-              onClick={next}
+              onClick={(e) => { e.stopPropagation(); next(); }}
               style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(255,248,230,0.85)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", zIndex: 2 }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6" /></svg>
             </button>
           </>
+        )}
+        {/* Zoom hint */}
+        {images.length > 0 && !isZoomed && (
+          <div style={{ position: "absolute", bottom: "0.75rem", right: "0.75rem", background: "rgba(255,248,230,0.85)", backdropFilter: "blur(8px)", borderRadius: 999, padding: "0.3rem 0.6rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.6rem", color: "var(--color-umber)", opacity: 0.5, letterSpacing: "0.08em", zIndex: 2 }}>
+            Click to zoom
+          </div>
         )}
       </div>
 
@@ -184,7 +226,7 @@ function SizeSelector({ sizes, selected, onSelect }: { sizes: string[]; selected
           Size {selected && <span style={{ color: "var(--color-gold)", opacity: 1 }}>— {selected}</span>}
         </span>
         <a
-          href="https://wa.me/918077762221?text=Hi%2C+can+you+help+me+find+my+ring+size%3F"
+          href={WHATSAPP_URL.sizeGuide}
           target="_blank"
           rel="noopener noreferrer"
           style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.6rem", color: "var(--color-gold)", textDecoration: "underline", opacity: 0.8 }}
@@ -307,6 +349,7 @@ function RelatedProducts({ productId, category }: { productId: string; category:
 function ProductPage() {
   const { id } = Route.useParams();
   const { addItem, count } = useCart();
+  const { isWishlisted, toggleWishlist, count: wishlistCount } = useWishlist();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sizeError, setSizeError] = useState(false);
 
@@ -329,7 +372,16 @@ function ProductPage() {
   // Fallback: if product_images table is empty (migration not run yet), use img
   const galleryImages = imageUrls.length > 0 ? imageUrls : product?.img ? [product.img] : [];
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  // Scroll to top when navigating between products
+  useEffect(() => { window.scrollTo(0, 0); }, [id]);
+
+  // Dynamic page title
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} — Lattév Jouel`;
+    }
+    return () => { document.title = "Lattév Jouel — Fine Contemporary Jewellery"; };
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -364,6 +416,18 @@ function ProductPage() {
   }
 
   const isSoldOut = product.sold || product.stock === 0;
+  const wishlisted = isWishlisted(product.id);
+
+  const handleToggleWishlist = () => {
+    toggleWishlist({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      was: product.was,
+      img: product.img,
+      href: `/product/${product.id}`,
+    });
+  };
 
   return (
     <div style={{ background: "var(--background)", color: "var(--foreground)", minHeight: "100vh" }}>
@@ -379,14 +443,33 @@ function ProductPage() {
           <Link to="/" aria-label="Lattév Jouel home">
             <img src="/lattev_transparent.webp" alt="Lattév Jouel" width={56} height={56} style={{ height: "clamp(40px,4vw,56px)", width: "auto", display: "block" }} />
           </Link>
-          <Link to="/cart" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.62rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--color-gold)" }}>
-            Cart ({count})
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/wishlist" className="cart-nav-link" aria-label={`Wishlist (${wishlistCount})`}>
+              <Heart size={17} strokeWidth={1.5} fill={wishlistCount > 0 ? "var(--color-gold)" : "none"} stroke="currentColor" style={{ display: "block", color: "var(--color-gold)" }} />
+              {wishlistCount > 0 && <span className="cart-badge">{wishlistCount}</span>}
+            </Link>
+            <Link to="/cart" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.62rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--color-gold)" }}>
+              Cart ({count})
+            </Link>
+          </div>
         </div>
       </nav>
 
       {/* ── Body ── */}
       <div style={{ paddingTop: "5.5rem" }}>
+        {/* Breadcrumbs */}
+        <div style={{ padding: "1rem 2rem 0", maxWidth: 1400, margin: "0 auto" }}>
+          <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.08em", color: "var(--color-umber)", opacity: 0.5, flexWrap: "wrap" }}>
+            <Link to="/" style={{ color: "inherit", textDecoration: "none" }}>Home</Link>
+            <span aria-hidden>›</span>
+            <Link to="/shop" search={{ category: "all" }} style={{ color: "inherit", textDecoration: "none" }}>Collection</Link>
+            <span aria-hidden>›</span>
+            <Link to="/shop" search={{ category: product.category as any }} style={{ color: "inherit", textDecoration: "none" }}>{CATEGORY_LABEL[product.category as keyof typeof CATEGORY_LABEL] || product.category}</Link>
+            <span aria-hidden>›</span>
+            <span style={{ color: "var(--color-gold)", opacity: 1 }}>{product.name}</span>
+          </nav>
+        </div>
+
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "calc(100vh - 5.5rem)", alignItems: "start" }} className="product-layout">
 
           {/* Left: Gallery */}
@@ -468,38 +551,84 @@ function ProductPage() {
 
             {/* CTA buttons */}
             <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginTop: "0.5rem" }}>
+              {/* Add to Cart + Wishlist row */}
               {!isSoldOut && product.price ? (
-                <button
-                  onClick={handleAddToCart}
-                  style={{
-                    width: "100%",
-                    padding: "1.1rem",
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: "0.75rem",
-                    letterSpacing: "0.22em",
-                    textTransform: "uppercase",
-                    fontWeight: 700,
-                    color: "#fff",
-                    background: sizeError ? "rgba(160,60,60,0.8)" : "linear-gradient(135deg, #4F5820 0%, #6B7326 100%)",
-                    border: "none",
-                    borderRadius: 10,
-                    cursor: "pointer",
-                    transition: "opacity 0.2s, transform 0.15s, background 0.2s",
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}
-                >
-                  + Add to Selection
-                </button>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <button
+                    onClick={handleAddToCart}
+                    style={{
+                      flex: 1,
+                      padding: "1.1rem",
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontSize: "0.75rem",
+                      letterSpacing: "0.22em",
+                      textTransform: "uppercase",
+                      fontWeight: 700,
+                      color: "#fff",
+                      background: sizeError ? "rgba(160,60,60,0.8)" : "linear-gradient(135deg, #4F5820 0%, #6B7326 100%)",
+                      border: "none",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      transition: "opacity 0.2s, transform 0.15s, background 0.2s",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}
+                  >
+                    + Add to Selection
+                  </button>
+                  {/* Wishlist toggle */}
+                  <button
+                    onClick={handleToggleWishlist}
+                    aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 10,
+                      border: `1.5px solid ${wishlisted ? "var(--color-gold)" : "rgba(107,115,38,0.25)"}`,
+                      background: wishlisted ? "rgba(107,115,38,0.1)" : "transparent",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "all 0.2s ease",
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1.05)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
+                  >
+                    <Heart size={20} strokeWidth={1.5} fill={wishlisted ? "#6B7326" : "none"} stroke="#4F5820" />
+                  </button>
+                </div>
               ) : (
-                <div style={{ width: "100%", padding: "1.1rem", textAlign: "center", fontFamily: "'DM Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--color-umber)", opacity: 0.4, border: "1px solid rgba(107,115,38,0.2)", borderRadius: 10 }}>
-                  Sold Out
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <div style={{ flex: 1, padding: "1.1rem", textAlign: "center", fontFamily: "'DM Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--color-umber)", opacity: 0.4, border: "1px solid rgba(107,115,38,0.2)", borderRadius: 10 }}>
+                    Sold Out
+                  </div>
+                  <button
+                    onClick={handleToggleWishlist}
+                    aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 10,
+                      border: `1.5px solid ${wishlisted ? "var(--color-gold)" : "rgba(107,115,38,0.25)"}`,
+                      background: wishlisted ? "rgba(107,115,38,0.1)" : "transparent",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transition: "all 0.2s ease",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Heart size={20} strokeWidth={1.5} fill={wishlisted ? "#6B7326" : "none"} stroke="#4F5820" />
+                  </button>
                 </div>
               )}
 
               {/* WhatsApp enquiry */}
               <a
-                href={`https://wa.me/918077762221?text=${encodeURIComponent(`Hi! I'm interested in "${product.name}" on lattevjouel.com — could you tell me more?`)}`}
+                href={WHATSAPP_URL.product(product.name)}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "0.9rem", borderRadius: 10, border: "1px solid rgba(107,115,38,0.25)", background: "transparent", color: "var(--color-umber)", fontFamily: "'DM Sans', sans-serif", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", textDecoration: "none", transition: "background 0.2s, border-color 0.2s" }}

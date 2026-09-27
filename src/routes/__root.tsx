@@ -17,6 +17,7 @@ import { WishlistProvider } from "../context/WishlistContext";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { Toaster } from "../components/ui/sonner";
 import { WhatsAppFloat } from "../components/ui/WhatsAppFloat";
+import { ScrollToTop } from "../components/ui/ScrollToTop";
 
 function NotFoundComponent() {
   return (
@@ -141,6 +142,8 @@ function RootComponent() {
             <Toaster />
             {/* Global WhatsApp CTA — visible on all pages */}
             <WhatsAppFloat />
+            {/* Scroll to top — visible on all pages after scrolling */}
+            <ScrollToTop />
             {/* Required: nested routes render here */}
             <Outlet />
           </CartProvider>
