@@ -223,8 +223,8 @@ function LuxeIntroStrip() {
 // ── Product Card ───────────────────────────────────────────────────────────────
 function LuxeProductCard({ piece }: { piece: ReturnType<typeof useLuxuryPieces>["data"] extends (infer T)[] | undefined ? T : never }) {
   const { addItem } = useCart();
-  const { toggle, isInWishlist } = useWishlist();
-  const inWishlist = isInWishlist(piece.id);
+  const { toggleWishlist, isWishlisted } = useWishlist();
+  const inWishlist = isWishlisted(piece.id);
 
   const categoryLabel: Record<string, string> = {
     rings: "Ring",
@@ -249,7 +249,7 @@ function LuxeProductCard({ piece }: { piece: ReturnType<typeof useLuxuryPieces>[
         )}
         <button
           className={`luxe-card__heart${inWishlist ? " active" : ""}`}
-          onClick={() => toggle({ id: piece.id, name: piece.name, price: piece.price ?? 0, img: piece.img ?? "" })}
+          onClick={() => toggleWishlist({ id: piece.id, name: piece.name, price: piece.price ?? 0, img: piece.img ?? "" })}
           aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
           <Heart size={16} strokeWidth={1.5} fill={inWishlist ? "#C9A96E" : "none"} stroke="#C9A96E" />
