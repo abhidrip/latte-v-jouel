@@ -19,7 +19,7 @@ export const WHATSAPP = {
   productInquiry: (name: string) =>
     `Hi! I'm interested in "${name}" on lattevjouel.com — could you tell me more?`,
   reviewCTA: "Hi! I'd love to share my experience with Lattév Jouel 😊",
-} as const;
+};
 
 export const WHATSAPP_URL = {
   general: `https://wa.me/${WHATSAPP.phone}?text=${encodeURIComponent(WHATSAPP.greeting)}`,
@@ -27,7 +27,7 @@ export const WHATSAPP_URL = {
   product: (name: string) =>
     `https://wa.me/${WHATSAPP.phone}?text=${encodeURIComponent(WHATSAPP.productInquiry(name))}`,
   review: `https://wa.me/${WHATSAPP.phone}?text=${encodeURIComponent(WHATSAPP.reviewCTA)}`,
-} as const;
+};
 
 export const CATEGORIES = ["all", "rings", "cuffs", "bangles", "bracelets", "pendants"] as const;
 export type Category = (typeof CATEGORIES)[number];
