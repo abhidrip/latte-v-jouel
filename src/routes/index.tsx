@@ -905,11 +905,22 @@ function Index() {
           </button>
 
           <div className="showcase-panel" data-panel={0}>
-            <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>{content?.showcase_1_kicker || "The Métier"}</div>
-            <h2 className="font-display mt-6" style={{ fontWeight: 300, color: "var(--color-umber)", fontSize: "clamp(2.4rem, 6vw, 5.5rem)", lineHeight: 1.05 }} dangerouslySetInnerHTML={{ __html: content?.showcase_1_title || "Sculpted in light." }} />
-            <p className="mt-6 max-w-lg text-sm leading-relaxed" style={{ color: "rgba(61,52,22,0.7)" }}>
-              {content?.showcase_1_desc || "Every contour shaped by hand — 22k gold reflections cast through the prism of intention."}
-            </p>
+            <h2
+              className="font-display"
+              style={{
+                fontWeight: 300,
+                color: "var(--color-umber)",
+                fontSize: "clamp(3.2rem, 10vw, 7rem)",
+                lineHeight: 1.05,
+                letterSpacing: "0.03em",
+              }}
+            >
+              {content?.showcase_1_title &&
+              content.showcase_1_title !== "HEHEHAHA" &&
+              content.showcase_1_title !== "Sculpted in light."
+                ? content.showcase_1_title
+                : "Lattev"}
+            </h2>
           </div>
 
           <div className="showcase-panel" data-panel={1}>
