@@ -924,11 +924,22 @@ function Index() {
           </div>
 
           <div className="showcase-panel" data-panel={1}>
-            <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>{content?.showcase_2_kicker || "The Geometry"}</div>
-            <h2 className="font-display mt-6" style={{ fontWeight: 300, color: "var(--color-umber)", fontSize: "clamp(2.4rem, 6vw, 5.5rem)", lineHeight: 1.05 }} dangerouslySetInnerHTML={{ __html: content?.showcase_2_title || "Circles that <span style=\"color: var(--color-gold)\">spiral</span><br /> into devotion." }} />
-            <p className="mt-6 max-w-lg text-sm leading-relaxed" style={{ color: "rgba(61,52,22,0.7)" }}>
-              {content?.showcase_2_desc || "Seven rings, one orbit. A meditation in concentric symmetry, drawn from the maison's first archive."}
-            </p>
+            <h2
+              className="font-display"
+              style={{
+                fontWeight: 300,
+                color: "var(--color-umber)",
+                fontSize: "clamp(2.6rem, 7vw, 5.5rem)",
+                lineHeight: 1.1,
+                letterSpacing: "0.02em",
+              }}
+            >
+              {content?.showcase_2_title &&
+              content.showcase_2_title !== "Circles that <span style=\"color: var(--color-gold)\">spiral</span><br /> into devotion." &&
+              content.showcase_2_title !== "Circles that spiral into devotion."
+                ? content.showcase_2_title
+                : "The Art of Adorning"}
+            </h2>
           </div>
 
           <div className="showcase-panel" data-panel={2}>
