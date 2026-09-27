@@ -943,12 +943,22 @@ function Index() {
           </div>
 
           <div className="showcase-panel" data-panel={2}>
-            <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>{content?.showcase_3_kicker || "The Maison"}</div>
-            <h2 className="font-display mt-6" style={{ fontWeight: 300, color: "var(--color-umber)", fontSize: "clamp(2.4rem, 6vw, 5.5rem)", lineHeight: 1.05 }} dangerouslySetInnerHTML={{ __html: content?.showcase_3_title || "A ring, <span class=\"gold-shine\">awakened.</span>" }} />
-            <p className="mt-6 max-w-lg text-sm leading-relaxed" style={{ color: "rgba(61,52,22,0.7)" }}>
-              {content?.showcase_3_desc || "Forged in 22k gold, polished by hand — an heirloom drawn from the maison's first archive."}
-            </p>
-            <Link to="/shop" className="liquid-glass-btn mt-10" style={{ pointerEvents: "auto" }}>Enter the Boutique</Link>
+            <h2
+              className="font-display"
+              style={{
+                fontWeight: 300,
+                color: "var(--color-umber)",
+                fontSize: "clamp(2.6rem, 7vw, 5.5rem)",
+                lineHeight: 1.1,
+                letterSpacing: "0.02em",
+              }}
+            >
+              {content?.showcase_3_title &&
+              !content.showcase_3_title.includes("awakened")
+                ? content.showcase_3_title
+                : "Adorn your everyday"}
+            </h2>
+            <Link to="/shop" className="liquid-glass-btn mt-8" style={{ pointerEvents: "auto" }}>Enter the Boutique</Link>
           </div>
 
         </div>
