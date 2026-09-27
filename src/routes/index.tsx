@@ -915,7 +915,7 @@ function Index() {
                 letterSpacing: "0.03em",
               }}
             >
-              Lattev
+              Lattév
             </h2>
           </div>
 
