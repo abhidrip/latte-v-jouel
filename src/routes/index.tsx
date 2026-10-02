@@ -816,7 +816,7 @@ function Index() {
           <LogoHero3D className="w-full h-full" />
         </div>
 
-        {/* Text block — bottom 38%, absolutely pinned */}
+        {/* CTA block — absolutely pinned below 3D logo */}
         <div
           ref={heroTextRef}
           style={{
@@ -824,29 +824,20 @@ function Index() {
             bottom: "8%",
             left: 0,
             right: 0,
-            height: "38%",
             zIndex: 2,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             textAlign: "center",
-            padding: "0 1.5rem 3rem",
+            padding: "0 1.5rem",
             pointerEvents: "none",
-            gap: "0.6rem",
           }}
         >
-          <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>
-            <SplitText text={content?.hero_kicker || "— Maison Lattév Jouel —"} />
-          </div>
-          <h1 className="font-display font-bold" style={{ color: "var(--color-umber)", fontWeight: 700, fontSize: "clamp(1.8rem, 4.5vw, 4.2rem)", lineHeight: 1.1, letterSpacing: "0.02em", margin: 0 }}>
-            <div><SplitText text={content?.hero_title_1 || "Crafted for the Bold"} /></div>
-            <div style={{ color: "var(--color-gold)" }}><SplitText text={content?.hero_title_2 || "Made to be Worn"} /></div>
-          </h1>
-          <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-umber)", opacity: 0.85, fontSize: "0.78rem" }}>
-            {content?.hero_subtitle || "Fine contemporary jewellery · Mumbai"}
-          </div>
-          <Link to="/shop" className="liquid-glass-btn font-bold" style={{ pointerEvents: "auto", marginTop: "0.5rem" }}>Explore Collection</Link>
+          <h1 className="sr-only">Lattév Jouel — Fine Contemporary Jewellery</h1>
+          <Link to="/shop" className="liquid-glass-btn font-bold" style={{ pointerEvents: "auto" }}>
+            Explore Collection
+          </Link>
         </div>
 
         <div style={{ position: "absolute", bottom: "1.5rem", left: "50%", transform: "translateX(-50%)", color: "var(--color-gold)", fontSize: "0.65rem", letterSpacing: "0.25em", textTransform: "uppercase", opacity: 0.75, animation: "scrollHint 2.4s ease-in-out infinite", zIndex: 3 }}>
