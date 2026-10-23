@@ -968,34 +968,74 @@ function Index() {
             "The right piece can completely change how you feel. It isn't about wearing more—it's about wearing something that feels like you."
           </blockquote>
 
-          {/* Letter body */}
-          <div className="founder-letter-body">
-            <div className="founder-letter-col">
-              <p>Hi, I'm Lavanya, the founder of Lattév.</p>
-              <p>Lattév started with something very simple—I just really, really loved jewellery. I was the person who collected earrings, rings and necklaces like they were souvenirs. My collection kept growing because I loved finding pieces that felt different, and somehow, my friends always ended up borrowing my jewellery or asking me what would look good with a particular outfit.</p>
-              <p>During the lockdown, when I was just 16, I wondered whether people would actually pay for my taste in jewellery. So I bought just ten pieces as an experiment. The rest is history.</p>
-              <p>Like many small businesses, Lattév had to pause a few times while I focused on college. But every break only made me more certain that this is what I wanted to build. 2026 is the year Lattév is back—and this time, it's here to stay.</p>
-              <p>People often ask why I chose jewellery. The truth is, I never really chose it. Jewellery chose me.</p>
-            </div>
-            <div className="founder-letter-col">
-              <p>I've always believed that the right piece can completely change how you feel. It isn't about wearing more—it's about wearing something that feels like you.</p>
-              <p>When I started sourcing, I realised the market had two problems: everything looked the same, and styling advice had disappeared. Everyone was selling jewellery, but very few were helping people discover what actually suited their face, skin tone, personality or wardrobe. That's what I wanted Lattév to be—not just another jewellery store, but a place where someone could ask, <em>"What would look good on me?"</em> and get an honest answer.</p>
-              <p>Quality has always come before everything else. No matter how beautiful a design is, if the quality doesn't meet my standards, it doesn't become part of Lattév.</p>
-              <p>People often think Lattév is a French word. It's actually much more personal than that. The name comes from the initials of me and my sisters—<strong>L</strong>avanya, <strong>T</strong>ia and <strong>V</strong>edanshi. A little piece of my family has been part of this brand from day one.</p>
-              <p>The moments that make me proud aren't sales numbers. They're the customers who come back to our next pop-up wearing jewellery they bought from us months ago. Those conversations are my favourite part of this journey.</p>
-            </div>
-          </div>
+          {/* Editorial Layout: Portrait + Letter */}
+          <div className="founder-letter-layout">
+            <aside className="founder-letter-media">
+              <div className="founder-portrait-card">
+                <div className="founder-portrait-frame">
+                  <picture>
+                    <source srcSet="/lavanya-founder.webp" type="image/webp" />
+                    <img
+                      src={content?.founder_image_url || "/lavanya-founder.jpg"}
+                      alt="Lavanya Pahwa — Founder & Creative Director, Lattév Jouel"
+                      className="founder-portrait-img"
+                      loading="lazy"
+                    />
+                  </picture>
+                  <div className="founder-portrait-accent-border" aria-hidden="true" />
+                </div>
+                <div className="founder-portrait-caption">
+                  <div className="founder-portrait-name">Lavanya Pahwa</div>
+                  <div className="founder-portrait-role">Founder, Lattév Jouel</div>
+                  <div className="founder-portrait-origin">Mumbai, India</div>
+                </div>
+              </div>
+            </aside>
 
-          {/* Closing line */}
-          <p className="founder-letter-closing">
-            At its heart, Lattév is about experimenting, embracing and owning who you are. My hope is that when you open a Lattév box, you don't just see jewellery—you see a little extension of yourself. Something that feels like it already belonged to you before you even wore it.
-          </p>
-          <p className="founder-letter-thanks">Thank you for being here. I'm so glad you found us.</p>
+            <div className="founder-letter-main">
+              <div className="founder-letter-body">
+                <p>Hi, I'm Lavanya, the founder of Lattév.</p>
+                <p>
+                  Lattév started with something very simple—I just really, really loved jewellery. I was the person who collected earrings, rings and necklaces like they were souvenirs. My collection kept growing because I loved finding pieces that felt different, and somehow, my friends always ended up borrowing my jewellery or asking me what would look good with a particular outfit.
+                </p>
+                <p>
+                  During the lockdown, when I was just 16, I wondered whether people would actually pay for my taste in jewellery. So I bought just ten pieces as an experiment. The rest is history.
+                </p>
+                <p>
+                  Like many small businesses, Lattév had to pause a few times while I focused on college. But every break only made me more certain that this is what I wanted to build. 2026 is the year Lattév is back—and this time, it's here to stay.
+                </p>
+                <p>
+                  People often ask why I chose jewellery. The truth is, I never really chose it. Jewellery chose me.
+                </p>
+                <p>
+                  I've always believed that the right piece can completely change how you feel. It isn't about wearing more—it's about wearing something that feels like you.
+                </p>
+                <p>
+                  When I started sourcing, I realised the market had two problems: everything looked the same, and styling advice had disappeared. Everyone was selling jewellery, but very few were helping people discover what actually suited their face, skin tone, personality or wardrobe. That's what I wanted Lattév to be—not just another jewellery store, but a place where someone could ask, <em>"What would look good on me?"</em> and get an honest answer.
+                </p>
+                <p>
+                  Quality has always come before everything else. No matter how beautiful a design is, if the quality doesn't meet my standards, it doesn't become part of Lattév.
+                </p>
+                <p>
+                  People often think Lattév is a French word. It's actually much more personal than that. The name comes from the initials of me and my sisters—<strong>L</strong>avanya, <strong>T</strong>ia and <strong>V</strong>edanshi. A little piece of my family has been part of this brand from day one.
+                </p>
+                <p>
+                  The moments that make me proud aren't sales numbers. They're the customers who come back to our next pop-up wearing jewellery they bought from us months ago. Those conversations are my favourite part of this journey.
+                </p>
+              </div>
 
-          {/* Signature */}
-          <div className="founder-letter-sig">
-            <span className="founder-letter-sig-name">— Lavanya</span>
-            <span className="founder-letter-sig-title">Founder, Lattév Jouel</span>
+              {/* Closing line */}
+              <p className="founder-letter-closing">
+                At its heart, Lattév is about experimenting, embracing and owning who you are. My hope is that when you open a Lattév box, you don't just see jewellery—you see a little extension of yourself. Something that feels like it already belonged to you before you even wore it.
+              </p>
+              <p className="founder-letter-thanks">Thank you for being here. I'm so glad you found us.</p>
+
+              {/* Signature */}
+              <div className="founder-letter-sig">
+                <span className="founder-letter-sig-name">— Lavanya</span>
+                <span className="founder-letter-sig-title">Founder, Lattév Jouel</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
