@@ -1,8 +1,6 @@
 // Supabase Edge Function: send-order-email
 // Sends a formatted order notification to lavanyapahwa717@gmail.com via Resend.
-//
-// Deploy: supabase functions deploy send-order-email --no-verify-jwt
-// Secret: supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
+// Deploy: npx supabase functions deploy send-order-email --no-verify-jwt
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -11,8 +9,9 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const NOTIFY_EMAIL = "lavanyapahwa717@gmail.com";
-const FROM_EMAIL   = "orders@lattevjouel.com"; // change to onboarding@resend.dev for testing before domain verification
+const TARGET_NOTIFY_EMAIL = Deno.env.get("ORDER_NOTIFY_EMAIL") || "lavanyapahwa717@gmail.com";
+const FALLBACK_TEST_EMAIL = "abhideepsahni123@gmail.com";
+const FROM_EMAIL          = Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -58,12 +57,14 @@ serve(async (req) => {
       .join("<br>");
 
     // ── HTML email ─────────────────────────────────────────────────
-    const html = `
+    const buildHtml = (warningNote?: string) => `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#fdf8f0;font-family:'Helvetica Neue',Helvetica,sans-serif;">
   <div style="max-width:600px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 24px rgba(61,52,22,0.08);">
+
+    ${warningNote ? `<div style="background:#fff3cd;color:#856404;padding:12px 24px;font-size:12px;text-align:center;border-bottom:1px solid #ffeeba;">${warningNote}</div>` : ""}
 
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#4F5820,#6B7326);padding:32px;text-align:center;">
@@ -144,30 +145,43 @@ serve(async (req) => {
 </html>`;
 
     // ── Send via Resend ────────────────────────────────────────────
-    const resendRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${resendKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to:   [NOTIFY_EMAIL],
-        subject: `🛍️ New Order — ${customerName} · ₹${Number(grandTotal).toLocaleString("en-IN")}`,
-        html,
-      }),
-    });
+    const sendEmail = async (toRecipient: string, warning?: string) => {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: FROM_EMAIL,
+          to:   [toRecipient],
+          subject: `🛍️ New Order — ${customerName} · ₹${Number(grandTotal).toLocaleString("en-IN")}`,
+          html: buildHtml(warning),
+        }),
+      });
+      return { response, data: await response.json() };
+    };
 
-    const resendData = await resendRes.json();
+    // Try primary recipient
+    let result = await sendEmail(TARGET_NOTIFY_EMAIL);
 
-    if (!resendRes.ok) {
-      console.error("Resend error:", resendData);
-      return new Response(JSON.stringify({ error: "Failed to send email.", detail: resendData }), {
+    // If Resend restricted testing to account owner's email address, fallback so notification isn't lost
+    if (!result.response.ok && TARGET_NOTIFY_EMAIL !== FALLBACK_TEST_EMAIL) {
+      console.warn("Primary recipient failed (likely unverified domain). Retrying with account email.");
+      result = await sendEmail(
+        FALLBACK_TEST_EMAIL,
+        `⚠️ Note: Sent to ${FALLBACK_TEST_EMAIL} because lattevjouel.com domain is not verified yet on resend.com. Verify domain to send to ${TARGET_NOTIFY_EMAIL}.`
+      );
+    }
+
+    if (!result.response.ok) {
+      console.error("Resend error:", result.data);
+      return new Response(JSON.stringify({ error: "Failed to send email.", detail: result.data }), {
         status: 500, headers: { ...CORS, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ success: true, emailId: resendData.id }), {
+    return new Response(JSON.stringify({ success: true, emailId: result.data.id }), {
       status: 200, headers: { ...CORS, "Content-Type": "application/json" },
     });
 
@@ -178,4 +192,3 @@ serve(async (req) => {
     });
   }
 });
-
