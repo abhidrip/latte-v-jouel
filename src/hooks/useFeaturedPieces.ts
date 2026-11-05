@@ -16,7 +16,7 @@ export function useFeaturedPieces() {
   return useQuery<FeaturedPiece[]>({
     queryKey: ['featured_pieces'],
     queryFn: async () => {
-      if (!supabase.supabaseUrl) return [];
+      if (!import.meta.env.VITE_SUPABASE_URL) return [];
 
       const { data, error } = await supabase
         .from('products')

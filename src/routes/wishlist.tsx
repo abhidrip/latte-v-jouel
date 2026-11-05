@@ -32,7 +32,7 @@ function WishlistPage() {
         alignItems: "center",
         justifyContent: "space-between",
       }}>
-        <Link to="/shop" style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", textDecoration: "none" }}>
+        <Link to="/shop" search={{ category: "all" }} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", textDecoration: "none" }}>
           <ArrowLeft size={14} />
           Collection
         </Link>
@@ -68,7 +68,7 @@ function WishlistPage() {
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.82rem", opacity: 0.45, marginTop: "0.5rem" }}>
               Tap the heart on any piece to save it here.
             </p>
-            <Link to="/shop" className="liquid-glass-btn" style={{ display: "inline-block", marginTop: "2.5rem" }}>
+            <Link to="/shop" search={{ category: "all" }} className="liquid-glass-btn" style={{ display: "inline-block", marginTop: "2.5rem" }}>
               Explore Collection
             </Link>
           </div>

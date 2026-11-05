@@ -81,7 +81,7 @@ function ShopPage() {
   const { data: allProducts = [], isLoading, isError } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      if (!supabase.supabaseUrl) return [];
+      if (!import.meta.env.VITE_SUPABASE_URL) return [];
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: true });
       if (error) {
         console.error("Supabase fetch error:", error);

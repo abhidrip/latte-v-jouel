@@ -73,6 +73,7 @@ function CartPage() {
         >
           <Link
             to="/shop"
+            search={{ category: "all" }}
             style={{
               fontFamily: "'DM Sans', sans-serif",
               fontSize: "0.62rem",
@@ -183,7 +184,7 @@ function CartPage() {
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.85rem", color: "var(--color-umber)", opacity: 0.5, marginTop: "0.75rem" }}>
             Discover pieces made to be worn.
           </p>
-          <Link to="/shop" className="liquid-glass-btn" style={{ marginTop: "2.5rem", display: "inline-flex" }}>
+          <Link to="/shop" search={{ category: "all" }} className="liquid-glass-btn" style={{ marginTop: "2.5rem", display: "inline-flex" }}>
             Explore the Collection
           </Link>
         </div>
@@ -233,7 +234,7 @@ function CartPage() {
               ))}
 
               <div style={{ marginTop: "2.5rem" }}>
-                <Link to="/shop" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.58rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--color-gold)", opacity: 0.65 }} className="hover:opacity-100 transition-opacity">
+                <Link to="/shop" search={{ category: "all" }} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.58rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--color-gold)", opacity: 0.65 }} className="hover:opacity-100 transition-opacity">
                   ← Continue Shopping
                 </Link>
               </div>

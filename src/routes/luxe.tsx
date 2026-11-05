@@ -1,4 +1,4 @@
-﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useLuxuryPieces } from "../hooks/useLuxuryPieces";
 import { useCart } from "../context/CartContext";
@@ -43,7 +43,7 @@ function LuxeNavbar() {
             </button>
             <div className="luxe-mobile-links">
               <Link to="/luxe" onClick={() => setMenuOpen(false)}>Luxe Collection</Link>
-              <Link to="/shop" onClick={() => setMenuOpen(false)}>All Pieces</Link>
+              <Link to="/shop" search={{ category: "all" }} onClick={() => setMenuOpen(false)}>All Pieces</Link>
               <Link to="/" onClick={() => setMenuOpen(false)}>Maison</Link>
               <a href={WHATSAPP_URL.general} target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>Concierge</a>
               <Link to="/wishlist" onClick={() => setMenuOpen(false)}>Wishlist</Link>
@@ -61,7 +61,7 @@ function LuxeNavbar() {
           </button>
           <div className="luxe-nav__left">
             <Link to="/" className="luxe-nav__link">← Maison</Link>
-            <Link to="/shop" className="luxe-nav__link">Collection</Link>
+            <Link to="/shop" search={{ category: "all" }} className="luxe-nav__link">Collection</Link>
           </div>
           <Link to="/luxe" className="luxe-nav__wordmark">
             Lattev <span className="luxe-nav__luxe-label">Luxe</span>
@@ -180,7 +180,7 @@ function LuxePage() {
           </div>
           <div className="luxe-footer__links">
             <Link to="/" className="luxe-footer__link">Back to Maison</Link>
-            <Link to="/shop" className="luxe-footer__link">Full Collection</Link>
+            <Link to="/shop" search={{ category: "all" }} className="luxe-footer__link">Full Collection</Link>
             <a href="https://instagram.com/lattevjouel" target="_blank" rel="noopener noreferrer" className="luxe-footer__link">@lattevjouel</a>
             <a href={WHATSAPP_URL.general} target="_blank" rel="noopener noreferrer" className="luxe-footer__link">Concierge</a>
           </div>

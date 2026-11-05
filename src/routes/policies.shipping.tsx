@@ -21,7 +21,7 @@ function PolicyLayout({ title, eyebrow, children }: { title: string; eyebrow: st
           ← Home
         </Link>
         <img src={logoAsset.url} alt="Lattév Jouel" style={{ height: 44, width: "auto" }} />
-        <Link to="/shop" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", textDecoration: "none" }}>
+        <Link to="/shop" search={{ category: "all" }} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", textDecoration: "none" }}>
           Shop
         </Link>
       </nav>

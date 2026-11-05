@@ -13,7 +13,7 @@ export function useBanner() {
   return useQuery<Banner | null>({
     queryKey: ['banner'],
     queryFn: async () => {
-      if (!supabase.supabaseUrl) return null;
+      if (!import.meta.env.VITE_SUPABASE_URL) return null;
 
       const { data, error } = await supabase
         .from('banner')

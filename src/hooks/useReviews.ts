@@ -13,7 +13,7 @@ export function useReviews() {
   return useQuery<Review[]>({
     queryKey: ['reviews'],
     queryFn: async () => {
-      if (!supabase.supabaseUrl) return [];
+      if (!import.meta.env.VITE_SUPABASE_URL) return [];
 
       const { data, error } = await supabase
         .from('reviews')

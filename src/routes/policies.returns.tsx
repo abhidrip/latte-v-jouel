@@ -19,7 +19,7 @@ function PolicyLayout({ title, eyebrow, children }: { title: string; eyebrow: st
       <nav style={{ background: "rgba(240,213,180,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(107,115,38,0.15)", padding: "1.2rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 }}>
         <Link to="/" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", textDecoration: "none" }}>← Home</Link>
         <img src={logoAsset.url} alt="Lattév Jouel" style={{ height: 44, width: "auto" }} />
-        <Link to="/shop" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", textDecoration: "none" }}>Shop</Link>
+        <Link to="/shop" search={{ category: "all" }} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", textDecoration: "none" }}>Shop</Link>
       </nav>
       <div style={{ background: "#E8B98A", padding: "5rem 1.5rem 3.5rem", textAlign: "center", borderBottom: "1px solid rgba(107,115,38,0.15)" }}>
         <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--color-gold)", marginBottom: "0.75rem" }}>{eyebrow}</div>

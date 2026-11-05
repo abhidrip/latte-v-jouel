@@ -30,7 +30,7 @@ export function useSiteContent() {
   return useQuery({
     queryKey: ['site_content'],
     queryFn: async () => {
-      if (!supabase.supabaseUrl) return {} as SiteContent;
+      if (!import.meta.env.VITE_SUPABASE_URL) return {} as SiteContent;
       
       const { data, error } = await supabase.from('site_content').select('*');
       

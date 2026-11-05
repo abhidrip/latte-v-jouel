@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { supabase } from "../lib/supabase";
+import { verifyRazorpayPayment } from "../lib/razorpay";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -26,13 +27,12 @@ interface RazorpayOptions {
   image?: string;
   prefill?: { name?: string; email?: string; contact?: string };
   theme?: { color?: string };
-  handler: (r: { razorpay_payment_id: string; razorpay_order_id: string }) => void;
+  handler: (r: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => void;
   modal?: { ondismiss?: () => void };
 }
 interface RazorpayInstance { open(): void; }
 
 type Step = "contact" | "address" | "review" | "payment";
-type PayMethod = "razorpay" | "cod";
 
 function loadRazorpay(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -156,7 +156,6 @@ function CheckoutPage() {
   const [city,        setCity]        = useState("");
   const [state,       setState]       = useState("");
   const [pincode,     setPincode]     = useState("");
-  const [payMethod,   setPayMethod]   = useState<PayMethod>("razorpay");
   const [processing,  setProcessing]  = useState(false);
   const [errorMsg,    setErrorMsg]    = useState("");
 
@@ -204,6 +203,27 @@ function CheckoutPage() {
     return data.id as string;
   };
 
+  // ── Send email notification (fire-and-forget) ──
+  const notifyOrder = (orderId: string) => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+    fetch(`${supabaseUrl}/functions/v1/send-order-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` },
+      body: JSON.stringify({
+        orderId,
+        customerName:  name.trim(),
+        customerEmail: email.trim(),
+        customerPhone: phone.trim(),
+        address: { line1, line2, city, state, pincode },
+        items: items.map(i => ({ name: i.name, price: i.price, quantity: i.quantity })),
+        subtotal:    total,
+        shippingFee: shipping,
+        grandTotal,
+      }),
+    }).catch(() => { /* email errors should never block checkout */ });
+  };
+
   // ── Razorpay payment ──
   const handleRazorpay = async () => {
     setProcessing(true);
@@ -236,7 +256,18 @@ function CheckoutPage() {
         theme:       { color: "#6B7326" },
         handler: async (response) => {
           try {
+            // Verify signature server-side before trusting the payment
+            const { isValid } = await verifyRazorpayPayment({
+              data: {
+                orderId:   rzpData.order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+              },
+            });
+            if (!isValid) throw new Error("Payment verification failed. Please contact us on WhatsApp.");
+
             const orderId = await saveOrder(rzpData.order_id, response.razorpay_payment_id, "paid");
+            notifyOrder(orderId);
             clearCart();
             navigate({ to: "/order/$id", params: { id: orderId } });
           } catch {
@@ -249,20 +280,6 @@ function CheckoutPage() {
       rzp.open();
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-      setProcessing(false);
-    }
-  };
-
-  // ── COD order ──
-  const handleCOD = async () => {
-    setProcessing(true);
-    setErrorMsg("");
-    try {
-      const orderId = await saveOrder(null, null, "cod_pending");
-      clearCart();
-      navigate({ to: "/order/$id", params: { id: orderId } });
-    } catch {
-      setErrorMsg("Could not place your order. Please try again or WhatsApp us.");
       setProcessing(false);
     }
   };
@@ -375,31 +392,23 @@ function CheckoutPage() {
             {/* ── Step 4: Payment ── */}
             {step === "payment" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                {/* Payment method selector */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  <PayMethodCard
-                    id="pay-razorpay"
-                    selected={payMethod === "razorpay"}
-                    onSelect={() => setPayMethod("razorpay")}
-                    title="Pay Now"
-                    subtitle="UPI · Cards · Net Banking · Wallets"
-                    badge="🔒 Secured by Razorpay"
-                  >
-                    <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.6rem" }}>
-                      {["UPI", "VISA", "MC", "RuPay", "NetBanking"].map(b => (
-                        <span key={b} style={{ padding: "0.15rem 0.5rem", borderRadius: 4, border: "1px solid rgba(107,115,38,0.2)", fontFamily: "'DM Sans', sans-serif", fontSize: "0.55rem", fontWeight: 700, letterSpacing: "0.06em", color: "var(--color-umber)", opacity: 0.55 }}>{b}</span>
-                      ))}
+                {/* Payment info */}
+                <div style={{ background: "rgba(107,115,38,0.07)", border: "2px solid var(--color-gold)", borderRadius: 10, padding: "1rem 1.25rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.88rem", fontWeight: 700, color: "var(--color-umber)", marginBottom: "0.2rem" }}>Pay Now</div>
+                      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", color: "var(--color-umber)", opacity: 0.55 }}>UPI · Cards · Net Banking · Wallets</div>
                     </div>
-                  </PayMethodCard>
-
-                  <PayMethodCard
-                    id="pay-cod"
-                    selected={payMethod === "cod"}
-                    onSelect={() => setPayMethod("cod")}
-                    title="Cash on Delivery"
-                    subtitle="Pay when your order arrives"
-                    badge="📦 Available across India"
-                  />
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid var(--color-gold)", background: "var(--color-gold)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#fff" }} />
+                    </div>
+                  </div>
+                  <div style={{ marginTop: "0.5rem", fontFamily: "'DM Sans', sans-serif", fontSize: "0.62rem", color: "var(--color-gold)", opacity: 0.7 }}>🔒 Secured by Razorpay</div>
+                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.6rem" }}>
+                    {["UPI", "VISA", "MC", "RuPay", "NetBanking"].map(b => (
+                      <span key={b} style={{ padding: "0.15rem 0.5rem", borderRadius: 4, border: "1px solid rgba(107,115,38,0.2)", fontFamily: "'DM Sans', sans-serif", fontSize: "0.55rem", fontWeight: 700, letterSpacing: "0.06em", color: "var(--color-umber)", opacity: 0.55 }}>{b}</span>
+                    ))}
+                  </div>
                 </div>
 
                 {errorMsg && (
@@ -413,16 +422,11 @@ function CheckoutPage() {
                     ← Back
                   </button>
                   <button
-                    onClick={payMethod === "cod" ? handleCOD : handleRazorpay}
+                    onClick={handleRazorpay}
                     disabled={processing}
                     style={{ flex: 1, padding: "0.9rem 1.5rem", background: processing ? "rgba(79,88,32,0.4)" : "linear-gradient(135deg,#4F5820,#6B7326)", color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700, border: "none", borderRadius: 8, cursor: processing ? "not-allowed" : "pointer", transition: "all 0.2s" }}
                   >
-                    {processing
-                      ? "Processing…"
-                      : payMethod === "cod"
-                      ? `Place COD Order — ₹${grandTotal.toLocaleString("en-IN")}`
-                      : `Pay ₹${grandTotal.toLocaleString("en-IN")} →`
-                    }
+                    {processing ? "Processing…" : `Pay ₹${grandTotal.toLocaleString("en-IN")} →`}
                   </button>
                 </div>
 

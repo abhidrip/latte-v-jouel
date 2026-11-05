@@ -241,6 +241,7 @@ function AlsoFeaturedSection({ content }: { content: Record<string, string | und
                   ) : item.product_name ? (
                     <Link
                       to="/shop"
+                      search={{ category: "all" }}
                       className="also-featured-shop-btn"
                     >
                       View This Piece
@@ -670,7 +671,7 @@ function Index() {
             </button>
           </div>
           <div className="flex flex-col gap-8 text-xl uppercase tracking-widest font-semibold" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-            <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)}>Collection</Link>
+            <Link to="/shop" search={{ category: "all" }} onClick={() => setIsMobileMenuOpen(false)}>Collection</Link>
             {/* Category sub-links */}
             <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", paddingLeft: "1rem", marginTop: "-0.5rem" }}>
               {(["rings", "cuffs", "bangles", "bracelets", "pendants"] as const).map((cat) => (
@@ -737,7 +738,7 @@ function Index() {
 
           <div className="hidden md:flex gap-10 uppercase items-center" style={{ color: "var(--color-onyx)", fontFamily: "'DM Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "0.15em", fontWeight: 700, textShadow: "0px 1px 4px rgba(255, 255, 255, 0.4)" }}>
             <div className="nav-dropdown">
-              <Link to="/shop" className="hover:text-[var(--color-gold)] transition-colors story-link nav-dropdown__trigger">
+              <Link to="/shop" search={{ category: "all" }} className="hover:text-[var(--color-gold)] transition-colors story-link nav-dropdown__trigger">
                 Collection <span aria-hidden="true">▾</span>
               </Link>
               <div className="nav-dropdown__menu" role="menu">
@@ -835,7 +836,7 @@ function Index() {
           }}
         >
           <h1 className="sr-only">Lattév Jouel — Fine Contemporary Jewellery</h1>
-          <Link to="/shop" className="liquid-glass-btn font-bold" style={{ pointerEvents: "auto" }}>
+          <Link to="/shop" search={{ category: "all" }} className="liquid-glass-btn font-bold" style={{ pointerEvents: "auto" }}>
             Explore Collection
           </Link>
         </div>
@@ -940,7 +941,7 @@ function Index() {
             >
               Adorn your everyday
             </h2>
-            <Link to="/shop" className="liquid-glass-btn mt-8" style={{ pointerEvents: "auto" }}>Enter the Boutique</Link>
+            <Link to="/shop" search={{ category: "all" }} className="liquid-glass-btn mt-8" style={{ pointerEvents: "auto" }}>Enter the Boutique</Link>
           </div>
 
         </div>
@@ -1134,7 +1135,7 @@ function Index() {
           <div>
             <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem", marginBottom: "1.25rem" }}>Navigate</div>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/shop" className="hover:text-[var(--color-gold)] transition-colors">Collection</Link></li>
+              <li><Link to="/shop" search={{ category: "all" }} className="hover:text-[var(--color-gold)] transition-colors">Collection</Link></li>
               <li><a href="#about" className="hover:text-[var(--color-gold)] transition-colors">About</a></li>
               <li><a href="#contact" className="hover:text-[var(--color-gold)] transition-colors">Contact</a></li>
               <li><Link to="/wishlist" className="hover:text-[var(--color-gold)] transition-colors">Wishlist</Link></li>

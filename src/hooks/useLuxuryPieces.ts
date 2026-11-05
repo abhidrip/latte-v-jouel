@@ -23,7 +23,7 @@ export function useLuxuryPieces() {
   return useQuery<LuxuryPiece[]>({
     queryKey: ['luxury_pieces'],
     queryFn: async () => {
-      if (!supabase.supabaseUrl) return [];
+      if (!import.meta.env.VITE_SUPABASE_URL) return [];
 
       const { data, error } = await supabase
         .from('products')

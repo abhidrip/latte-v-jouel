@@ -19,7 +19,7 @@ export function useAlsoFeatured() {
   return useQuery<AlsoFeaturedItem[]>({
     queryKey: ['also_featured'],
     queryFn: async () => {
-      if (!supabase.supabaseUrl) return [];
+      if (!import.meta.env.VITE_SUPABASE_URL) return [];
 
       const { data, error } = await supabase
         .from('also_featured')
