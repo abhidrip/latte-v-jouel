@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { supabase } from "../lib/supabase";
-import { verifyRazorpayPayment } from "../lib/razorpay";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -244,27 +243,38 @@ function CheckoutPage() {
       if (!res.ok || !rzpData.order_id) throw new Error(rzpData.error ?? "Payment setup failed. Please try again.");
 
       // Open Razorpay modal
+      const keyIdToUse = rzpData.key_id || (import.meta.env.VITE_RAZORPAY_KEY_ID as string) || "rzp_live_TwZdmzgdIbx55r";
+      const logoUrl = typeof window !== "undefined"
+        ? `${window.location.origin}/lattev_transparent.webp`
+        : "https://lattevjouel.com/lattev_transparent.webp";
+
       const rzp = new window.Razorpay({
-        key:         import.meta.env.VITE_RAZORPAY_KEY_ID as string,
+        key:         keyIdToUse,
         amount:      rzpData.amount,
         currency:    rzpData.currency,
         order_id:    rzpData.order_id,
         name:        "Lattév Jouel",
         description: `Order of ${items.length} piece${items.length > 1 ? "s" : ""}`,
-        image:       "/lattev_transparent.webp",
-        prefill:     { name, email, contact: phone },
+        image:       logoUrl,
+        prefill:     { name: name.trim(), email: email.trim(), contact: phone.trim() },
         theme:       { color: "#6B7326" },
         handler: async (response) => {
           try {
-            // Verify signature server-side before trusting the payment
-            const { isValid } = await verifyRazorpayPayment({
-              data: {
-                orderId:   rzpData.order_id,
+            // Verify signature server-side via Supabase Edge Function
+            const verifyRes = await fetch(`${supabaseUrl}/functions/v1/create-razorpay-order`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` },
+              body: JSON.stringify({
+                action: "verify",
+                orderId: rzpData.order_id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
-              },
+              }),
             });
-            if (!isValid) throw new Error("Payment verification failed. Please contact us on WhatsApp.");
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok || !verifyData.isValid) {
+              throw new Error("Payment verification failed. Please contact us on WhatsApp.");
+            }
 
             const orderId = await saveOrder(rzpData.order_id, response.razorpay_payment_id, "paid");
             notifyOrder(orderId);
