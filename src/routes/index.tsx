@@ -93,7 +93,7 @@ function ReelVideo({ src, instagramUrl }: { src: string; instagramUrl: string })
   };
   const handleMouseLeave = () => {
     setIsHovered(false);
-    videoRef.current?.play().catch(() => {});
+    videoRef.current?.play().catch(() => { });
   };
 
   return (
@@ -140,9 +140,9 @@ function ReelVideo({ src, instagramUrl }: { src: string; instagramUrl: string })
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
             <div style={{ width: 52, height: 52, background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                <circle cx="12" cy="12" r="4"/>
-                <circle cx="17.5" cy="6.5" r="0.5" fill="white"/>
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="0.5" fill="white" />
               </svg>
             </div>
           </div>
@@ -303,7 +303,7 @@ function FeaturedPiecesSection({ content }: { content: Record<string, string | u
               {content.featured_pieces_heading || "Featured Pieces"}
             </h2>
             <p className="fp-subtitle">
-              {content.featured_pieces_subheading || "Curated favourites from the maison"}
+              {content.featured_pieces_subheading || "Our curated favourites"}
             </p>
           </div>
           {/* Nav arrows — desktop only */}
@@ -395,7 +395,7 @@ function LuxurySection({ content }: { content: Record<string, string | undefined
         {/* Header */}
         <div className="luxury-header">
           <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", opacity: 0.8, fontSize: "0.72rem", marginBottom: "0.5rem" }}>
-            {content.luxury_kicker || "Maison Sélection"}
+            {content.luxury_kicker || "Home Edit"}
           </div>
           <h2 className="luxury-title font-display">
             {content.luxury_heading || "The Luxury Edit"}
@@ -503,7 +503,7 @@ function Index() {
       video.play().catch(() => {
         // Last resort: retry on first touch/click
         const retry = () => {
-          video.play().catch(() => {});
+          video.play().catch(() => { });
         };
         document.addEventListener('touchstart', retry, { once: true, capture: true });
         document.addEventListener('click', retry, { once: true, capture: true });
@@ -522,7 +522,7 @@ function Index() {
   // GSAP + Lenis — performance-optimised setup
   useEffect(() => {
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    let cleanup = () => {};
+    let cleanup = () => { };
     (async () => {
       const [{ default: gsap }, { ScrollTrigger }, { default: Lenis }] = await Promise.all([
         import('gsap'),
@@ -725,69 +725,69 @@ function Index() {
         {/* Banner sits at the very top of the fixed nav — this avoids overlap */}
         <DiscountBanner />
         <div style={{ padding: "1.4rem 2rem" }}>
-        <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
-          {/* Mobile Menu Toggle (Top Left) */}
-          <button
-            className="md:hidden flex items-center p-2 -ml-2"
-            onClick={() => setIsMobileMenuOpen(true)}
-            aria-label="Open menu"
-            style={{ color: "var(--color-onyx)", filter: "drop-shadow(0px 1px 4px rgba(255,255,255,0.4))" }}
-          >
-            <Menu size={24} strokeWidth={2} />
-          </button>
+          <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
+            {/* Mobile Menu Toggle (Top Left) */}
+            <button
+              className="md:hidden flex items-center p-2 -ml-2"
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Open menu"
+              style={{ color: "var(--color-onyx)", filter: "drop-shadow(0px 1px 4px rgba(255,255,255,0.4))" }}
+            >
+              <Menu size={24} strokeWidth={2} />
+            </button>
 
-          <div className="hidden md:flex gap-10 uppercase items-center" style={{ color: "var(--color-onyx)", fontFamily: "'DM Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "0.15em", fontWeight: 700, textShadow: "0px 1px 4px rgba(255, 255, 255, 0.4)" }}>
-            <div className="nav-dropdown">
-              <Link to="/shop" search={{ category: "all" }} className="hover:text-[var(--color-gold)] transition-colors story-link nav-dropdown__trigger">
-                Collection <span aria-hidden="true">▾</span>
+            <div className="hidden md:flex gap-10 uppercase items-center" style={{ color: "var(--color-onyx)", fontFamily: "'DM Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "0.15em", fontWeight: 700, textShadow: "0px 1px 4px rgba(255, 255, 255, 0.4)" }}>
+              <div className="nav-dropdown">
+                <Link to="/shop" search={{ category: "all" }} className="hover:text-[var(--color-gold)] transition-colors story-link nav-dropdown__trigger">
+                  Collection <span aria-hidden="true">▾</span>
+                </Link>
+                <div className="nav-dropdown__menu" role="menu">
+                  <Link to="/shop" search={{ category: "all" }} className="nav-dropdown__item">All Pieces</Link>
+                  <Link to="/shop" search={{ category: "rings" }} className="nav-dropdown__item">Rings</Link>
+                  <Link to="/shop" search={{ category: "cuffs" }} className="nav-dropdown__item">Cuffs</Link>
+                  <Link to="/shop" search={{ category: "bangles" }} className="nav-dropdown__item">Bangles</Link>
+                  <Link to="/shop" search={{ category: "bracelets" }} className="nav-dropdown__item">Bracelets</Link>
+                  <Link to="/shop" search={{ category: "pendants" }} className="nav-dropdown__item">Pendants</Link>
+                </div>
+              </div>
+              <a href="#about" className="hover:text-[var(--color-gold)] transition-colors story-link">About</a>
+              <a href="#contact" className="hover:text-[var(--color-gold)] transition-colors story-link">Contact</a>
+              <Link to="/luxe" className="story-link" style={{ color: "var(--color-gold)", fontStyle: "italic", letterSpacing: "0.12em" }}>Luxe ✦</Link>
+            </div>
+
+
+            <div className="flex items-center gap-5 ml-auto md:ml-0" style={{ color: "var(--color-onyx)", filter: "drop-shadow(0px 1px 4px rgba(255,255,255,0.4))" }}>
+              {/* Search icon */}
+              <button
+                type="button"
+                className="cart-nav-link hidden md:flex"
+                aria-label="Search"
+                onClick={() => navigate({ to: "/search", search: { q: "" } })}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit" }}
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ display: "block" }}>
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                </svg>
+              </button>
+              {/* Wishlist icon */}
+              <Link to="/wishlist" className="cart-nav-link" aria-label={`Wishlist (${wishlistCount})`}>
+                <Heart size={17} strokeWidth={1.5} fill={wishlistCount > 0 ? "var(--color-gold)" : "none"} stroke="currentColor" style={{ display: "block" }} />
+                {wishlistCount > 0 && <span className="cart-badge">{wishlistCount}</span>}
               </Link>
-              <div className="nav-dropdown__menu" role="menu">
-                <Link to="/shop" search={{ category: "all" }} className="nav-dropdown__item">All Pieces</Link>
-                <Link to="/shop" search={{ category: "rings" }} className="nav-dropdown__item">Rings</Link>
-                <Link to="/shop" search={{ category: "cuffs" }} className="nav-dropdown__item">Cuffs</Link>
-                <Link to="/shop" search={{ category: "bangles" }} className="nav-dropdown__item">Bangles</Link>
-                <Link to="/shop" search={{ category: "bracelets" }} className="nav-dropdown__item">Bracelets</Link>
-                <Link to="/shop" search={{ category: "pendants" }} className="nav-dropdown__item">Pendants</Link>
+              {/* Cart bag icon */}
+              <Link to="/cart" className="cart-nav-link" aria-label={`Cart (${count} items)`}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}>
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                {count > 0 && <span className="cart-badge">{count}</span>}
+              </Link>
+              <div className="hidden md:block uppercase" style={{ color: "var(--color-onyx)", fontFamily: "'DM Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "0.15em", fontWeight: 700, textShadow: "0px 1px 4px rgba(255, 255, 255, 0.4)" }}>
+                @lattevjouel
               </div>
             </div>
-            <a href="#about" className="hover:text-[var(--color-gold)] transition-colors story-link">About</a>
-            <a href="#contact" className="hover:text-[var(--color-gold)] transition-colors story-link">Contact</a>
-            <Link to="/luxe" className="story-link" style={{ color: "var(--color-gold)", fontStyle: "italic", letterSpacing: "0.12em" }}>Luxe ✦</Link>
           </div>
-
-
-          <div className="flex items-center gap-5 ml-auto md:ml-0" style={{ color: "var(--color-onyx)", filter: "drop-shadow(0px 1px 4px rgba(255,255,255,0.4))" }}>
-            {/* Search icon */}
-            <button
-              type="button"
-              className="cart-nav-link hidden md:flex"
-              aria-label="Search"
-              onClick={() => navigate({ to: "/search", search: { q: "" } })}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit" }}
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ display: "block" }}>
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-              </svg>
-            </button>
-            {/* Wishlist icon */}
-            <Link to="/wishlist" className="cart-nav-link" aria-label={`Wishlist (${wishlistCount})`}>
-              <Heart size={17} strokeWidth={1.5} fill={wishlistCount > 0 ? "var(--color-gold)" : "none"} stroke="currentColor" style={{ display: "block" }} />
-              {wishlistCount > 0 && <span className="cart-badge">{wishlistCount}</span>}
-            </Link>
-            {/* Cart bag icon */}
-            <Link to="/cart" className="cart-nav-link" aria-label={`Cart (${count} items)`}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: "block" }}>
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
-              {count > 0 && <span className="cart-badge">{count}</span>}
-            </Link>
-            <div className="hidden md:block uppercase" style={{ color: "var(--color-onyx)", fontFamily: "'DM Sans', sans-serif", fontSize: "0.75rem", letterSpacing: "0.15em", fontWeight: 700, textShadow: "0px 1px 4px rgba(255, 255, 255, 0.4)" }}>
-              @lattevjouel
-            </div>
-          </div>
-        </div>
         </div>
       </nav>
 

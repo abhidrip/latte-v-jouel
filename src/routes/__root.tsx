@@ -33,7 +33,7 @@ function NotFoundComponent() {
           to="/"
           className="liquid-glass-btn"
         >
-          Return to Maison
+          Return to Home
         </Link>
       </div>
     </div>
