@@ -127,7 +127,7 @@ function LuxePage() {
           The <em>Luxury</em> Edit
         </h1>
         <p className="luxe-shop-tagline">
-          Extraordinary pieces, crafted for extraordinary moments.
+          Extraordinary pieces, curated for extraordinary moments.
         </p>
       </header>
 

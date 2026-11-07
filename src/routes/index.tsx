@@ -1052,15 +1052,11 @@ function Index() {
           </div>
           <div data-fade-right className="flex items-center justify-center p-10 md:p-20">
             <div>
-              <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold-soft)", fontSize: "0.75rem", marginBottom: "0.5rem" }}>{content?.about_kicker || "Our Ethos"}</div>
               <h2 className="font-display mt-6" style={{ fontWeight: 300, fontSize: "clamp(2rem, 4vw, 3.5rem)", lineHeight: 1.15 }}>
                 {content?.about_title_1 || "Jewellery is not decoration."}
                 <br />
                 <span style={{ color: "var(--color-gold-soft)" }}>{content?.about_title_2 || "It is identity."}</span>
               </h2>
-              <p className="mt-8 leading-relaxed max-w-md text-base" style={{ color: "#3D3416" }}>
-                {content?.about_desc || "Lattév Jouel is crafted in India, by hand, for those who wear meaning. Each piece draws from the cosmos and the feminine form — silhouettes that hold memory, motion, and the quiet power of being seen."}
-              </p>
               <p className="mt-4 uppercase tracking-luxe" style={{ color: "var(--color-gold-soft)", opacity: 0.8, fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem" }}>
                 {content?.about_tagline || "— Founded in Mumbai"}
               </p>

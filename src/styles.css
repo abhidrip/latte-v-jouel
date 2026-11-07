@@ -71,6 +71,41 @@ body {
   .also-featured-photo {
     transition-duration: 0.25s !important;
   }
+
+  /* Disable hover transforms on mobile — they fire on tap and cause jank     */
+  .fp-card:hover,
+  .luxury-card:hover {
+    transform: none !important;
+  }
+
+  /* Disable image scale on hover (mobile taps trigger hover state briefly)   */
+  .fp-card:hover .fp-card-img,
+  .luxury-card:hover .luxury-card-img,
+  .also-featured-photo-wrap:hover .also-featured-photo {
+    transform: none !important;
+  }
+
+  /* Disable luxury gradient background animation — cheaper solid bg on mobile */
+  .luxury-section {
+    background: #E0A97E !important;
+  }
+
+  /* Remove will-change on mobile — reduces compositor layer count             */
+  .community-reels-grid video,
+  .fp-card-img,
+  .also-featured-photo {
+    will-change: auto !important;
+  }
+
+  /* Reduce luxury card width for snappier swipe feel                         */
+  .luxury-card {
+    flex: 0 0 78vw !important;
+  }
+
+  /* Also-featured section: reduce padding                                    */
+  .also-featured-section {
+    padding: 3.5rem 0 !important;
+  }
 }
 
 .font-display {
@@ -1690,13 +1725,15 @@ body {
   transform: translateY(-2px);
 }
 
-/* Mobile: stack vertically */
+/* Mobile: compact horizontal frame — person + product side by side in one tile */
 @media (max-width: 767px) {
   .also-featured-card {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    padding: 1.5rem;
-    gap: 1.5rem;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    padding: 1rem;
+    gap: 0.75rem;
+    align-items: stretch;
+    border-radius: 16px;
   }
 }
 
@@ -1767,9 +1804,7 @@ body {
 
 @media (max-width: 767px) {
   .also-featured-divider {
-    flex-direction: row;
-    justify-content: center;
-    padding: 0;
+    display: none; /* hide divider in compact mobile frame */
   }
   .also-featured-divider-line {
     width: 60px !important;
@@ -1820,6 +1855,30 @@ body {
 @media (max-width: 767px) {
   .also-featured-product-img-wrap {
     max-width: 100%;
+  }
+  /* Person photo: compact aspect ratio in side-by-side layout */
+  .also-featured-photo {
+    aspect-ratio: 2 / 3;
+  }
+  .also-featured-photo-wrap {
+    max-width: 100%;
+    border-radius: 10px;
+  }
+  /* Product info: smaller text on mobile */
+  .also-featured-product-name {
+    font-size: 1rem;
+  }
+  .also-featured-product-info {
+    gap: 0.25rem;
+    padding: 0;
+  }
+  .also-featured-shop-btn {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.6rem;
+    margin-top: 0.5rem;
+  }
+  .also-featured-name {
+    font-size: 1rem;
   }
 }
 
@@ -2442,6 +2501,13 @@ body {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+/* Always hide arrows on mobile — CSS display:flex above overrides Tailwind 'hidden' */
+@media (max-width: 767px) {
+  .luxury-nav {
+    display: none !important;
+  }
 }
 
 .luxury-nav-btn {
