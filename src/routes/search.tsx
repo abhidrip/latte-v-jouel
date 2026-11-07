@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+import { useCategories, categoryLabel } from "../hooks/useCategories";
 
 // ── Route ─────────────────────────────────────────────────────────────────────
 type SearchSearch = { q: string };
@@ -65,6 +66,8 @@ function SearchPage() {
   const navigate = useNavigate();
   const [localQ, setLocalQ] = useState(q);
   const { results, isLoading } = useSearchProducts(q);
+  const { data: dynamicCategories = ["all"] } = useCategories();
+  const categoryPills = dynamicCategories.filter(c => c !== "all");
 
   // Sync URL when user finishes typing (debounced)
   useEffect(() => {
@@ -189,11 +192,11 @@ function SearchPage() {
               What are you looking for?
             </p>
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1.5rem" }}>
-              {["rings", "cuffs", "bangles", "bracelets", "pendants"].map((cat) => (
+              {categoryPills.map((cat) => (
                 <Link
                   key={cat}
                   to="/shop"
-                  search={{ category: cat as "rings" | "cuffs" | "bangles" | "bracelets" | "pendants" }}
+                  search={{ category: cat as any }}
                   style={{
                     padding: "0.4rem 1rem",
                     borderRadius: 999,
@@ -210,7 +213,7 @@ function SearchPage() {
                   onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "1"; (e.currentTarget as HTMLAnchorElement).style.background = "rgba(232,185,138,0.2)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "0.7"; (e.currentTarget as HTMLAnchorElement).style.background = "transparent"; }}
                 >
-                  {cat}
+                  {categoryLabel(cat)}
                 </Link>
               ))}
             </div>

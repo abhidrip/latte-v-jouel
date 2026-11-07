@@ -304,7 +304,7 @@ function FeaturedPiecesSection({ content }: { content: Record<string, string | u
               {content.featured_pieces_heading || "Featured Pieces"}
             </h2>
             <p className="fp-subtitle">
-              {content.featured_pieces_subheading || "Our curated favourites"}
+              {(content.featured_pieces_subheading && !content.featured_pieces_subheading.toLowerCase().includes("maison")) ? content.featured_pieces_subheading : "Our curated favourites"}
             </p>
           </div>
           {/* Nav arrows — desktop only */}
@@ -396,7 +396,7 @@ function LuxurySection({ content }: { content: Record<string, string | undefined
         {/* Header */}
         <div className="luxury-header">
           <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", opacity: 0.8, fontSize: "0.72rem", marginBottom: "0.5rem" }}>
-            {content.luxury_kicker || "Home Edit"}
+            {(content.luxury_kicker && content.luxury_kicker !== "Maison Sélection") ? content.luxury_kicker : "Home Edit"}
           </div>
           <h2 className="luxury-title font-display">
             {content.luxury_heading || "The Luxury Edit"}

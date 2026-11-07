@@ -117,7 +117,7 @@ function ShopPage() {
         <DiscountBanner />
         <div style={{ padding: "1.2rem 2rem" }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto gap-4">
-          <Link to="/" className="tracking-luxe uppercase hover:text-[var(--color-gold)] transition-colors font-medium">← Maison</Link>
+          <Link to="/" className="tracking-luxe uppercase hover:text-[var(--color-gold)] transition-colors font-medium">← Home</Link>
           <div className="hidden md:flex items-center gap-8 tracking-luxe uppercase font-medium">
             <div className="nav-dropdown">
               <button type="button" className="nav-dropdown__trigger hover:text-[var(--color-gold)] transition-colors">
