@@ -13,7 +13,8 @@ import { useAlsoFeatured } from "../hooks/useAlsoFeatured";
 import { useFeaturedPieces } from "../hooks/useFeaturedPieces";
 import { useLuxuryPieces } from "../hooks/useLuxuryPieces";
 import { DiscountBanner } from "../components/ui/DiscountBanner";
-import { WHATSAPP_URL, CATEGORY_LABEL } from "../lib/constants";
+import { WHATSAPP_URL } from "../lib/constants";
+import { useCategories, categoryLabel } from "../hooks/useCategories";
 import heroVideoUrl from "../assets/hero-video.mp4?url";
 const boothAsset = { url: "/lattev-booth.webp" };
 const heroVideoAsset = { url: heroVideoUrl };
@@ -486,6 +487,8 @@ function Index() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const safeContent: Record<string, string | undefined> = content ?? {};
   const navigate = useNavigate();
+  const { data: dynamicCategories = ["all"] } = useCategories();
+  const categorySlugs = dynamicCategories.filter((c) => c !== "all");
 
   // Belt-and-suspenders video play strategy:
   // 1. `autoPlay` attribute handles desktop browsers automatically.
@@ -674,7 +677,7 @@ function Index() {
             <Link to="/shop" search={{ category: "all" }} onClick={() => setIsMobileMenuOpen(false)}>Collection</Link>
             {/* Category sub-links */}
             <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", paddingLeft: "1rem", marginTop: "-0.5rem" }}>
-              {(["rings", "cuffs", "bangles", "bracelets", "pendants"] as const).map((cat) => (
+              {categorySlugs.map((cat) => (
                 <Link
                   key={cat}
                   to="/shop"
@@ -682,7 +685,7 @@ function Index() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   style={{ fontSize: "0.85rem", letterSpacing: "0.12em", opacity: 0.65, fontWeight: 500 }}
                 >
-                  {CATEGORY_LABEL[cat]}
+                  {categoryLabel(cat)}
                 </Link>
               ))}
             </div>
@@ -743,11 +746,11 @@ function Index() {
                 </Link>
                 <div className="nav-dropdown__menu" role="menu">
                   <Link to="/shop" search={{ category: "all" }} className="nav-dropdown__item">All Pieces</Link>
-                  <Link to="/shop" search={{ category: "rings" }} className="nav-dropdown__item">Rings</Link>
-                  <Link to="/shop" search={{ category: "cuffs" }} className="nav-dropdown__item">Cuffs</Link>
-                  <Link to="/shop" search={{ category: "bangles" }} className="nav-dropdown__item">Bangles</Link>
-                  <Link to="/shop" search={{ category: "bracelets" }} className="nav-dropdown__item">Bracelets</Link>
-                  <Link to="/shop" search={{ category: "pendants" }} className="nav-dropdown__item">Pendants</Link>
+                  {categorySlugs.map((cat) => (
+                    <Link key={cat} to="/shop" search={{ category: cat }} className="nav-dropdown__item">
+                      {categoryLabel(cat)}
+                    </Link>
+                  ))}
                 </div>
               </div>
               <a href="#about" className="hover:text-[var(--color-gold)] transition-colors story-link">About</a>

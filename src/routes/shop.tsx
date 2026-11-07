@@ -8,25 +8,25 @@ import { useWishlist } from "../context/WishlistContext";
 import { DiscountBanner } from "../components/ui/DiscountBanner";
 import { useProductSecondaryImages } from "../hooks/useProductSecondaryImages";
 import { Heart } from "lucide-react";
+import { useCategories, categoryLabel, categoryTagline } from "../hooks/useCategories";
 const logoAsset = { url: "/lattev_transparent.webp" };
 
-const CATEGORIES = ["all", "rings", "cuffs", "bangles", "bracelets", "pendants"] as const;
-type Category = (typeof CATEGORIES)[number];
+// Category is now an open string — any value from the DB is valid
+type Category = string;
 
 type ShopSearch = { category: Category };
 
 export const Route = createFileRoute("/shop")({
   validateSearch: (raw: Record<string, unknown>): ShopSearch => {
     const c = raw.category;
+    // Accept any non-empty string — dynamic categories from DB
     return {
-      category: typeof c === "string" && (CATEGORIES as readonly string[]).includes(c)
-        ? (c as Category)
-        : "all",
+      category: typeof c === "string" && c.length > 0 ? c : "all",
     };
   },
   head: ({ match }) => {
     const cat = (match.search as ShopSearch).category;
-    const label = cat === "all" ? "The Collection" : cat[0].toUpperCase() + cat.slice(1);
+    const label = categoryLabel(cat);
     return {
       meta: [
         { title: `${label} — Lattév Jouel` },
@@ -52,24 +52,6 @@ type Product = {
   description?: string;
 };
 
-const CATEGORY_LABEL: Record<Category, string> = {
-  all: "The Collection",
-  rings: "Rings",
-  cuffs: "Cuffs",
-  bangles: "Bangles",
-  bracelets: "Bracelets",
-  pendants: "Pendants",
-};
-
-const CATEGORY_TAGLINE: Record<Category, string> = {
-  all: "Each piece, a story.",
-  rings: "Sculpted circles, quiet devotion.",
-  cuffs: "For wrists that speak first.",
-  bangles: "Stacked, layered, eternal.",
-  bracelets: "Linked light. Endless line.",
-  pendants: "Worn close to the heart.",
-};
-
 function ShopPage() {
   const { category } = Route.useSearch() as ShopSearch;
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -77,6 +59,8 @@ function ShopPage() {
   const { count: wishlistCount } = useWishlist();
   const navigate = useNavigate();
   const { data: secondaryImagesMap } = useProductSecondaryImages();
+  // Dynamic categories from DB — auto-updates when admin adds a new category
+  const { data: dynamicCategories = ["all"] } = useCategories();
 
   const { data: allProducts = [], isLoading, isError } = useQuery({
     queryKey: ['products'],
@@ -140,7 +124,7 @@ function ShopPage() {
                 Collections <span aria-hidden="true">▾</span>
               </button>
               <div className="nav-dropdown__menu" role="menu">
-                {CATEGORIES.map((c) => (
+                {dynamicCategories.map((c) => (
                   <Link
                     key={c}
                     to="/shop"
@@ -148,7 +132,7 @@ function ShopPage() {
                     className="nav-dropdown__item"
                     data-active={c === category}
                   >
-                    {CATEGORY_LABEL[c]}
+                    {categoryLabel(c)}
                   </Link>
                 ))}
               </div>
@@ -193,17 +177,17 @@ function ShopPage() {
       <header style={{ textAlign: "center", padding: "10rem 1.5rem 4rem", background: "#ffffff" }}>
         <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem" }}>The Edit</div>
         <h1 className="font-display mt-4" style={{ fontWeight: 300, fontSize: "clamp(2.8rem, 7vw, 6rem)", lineHeight: 1 }}>
-          {category === "all" ? <>The <span className="gold-shine">Collection</span></> : <span className="gold-shine">{CATEGORY_LABEL[category]}</span>}
+          {category === "all" ? <>The <span className="gold-shine">Collection</span></> : <span className="gold-shine">{categoryLabel(category)}</span>}
         </h1>
         <p className="mt-6 max-w-xl mx-auto uppercase tracking-luxe" style={{ color: "var(--color-gold)", opacity: 0.8, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, fontSize: "0.8rem" }}>
-          {CATEGORY_TAGLINE[category]}
+          {categoryTagline(category)}
         </p>
       </header>
 
       <section style={{ padding: "5rem 1.5rem 8rem", background: "#ffffff" }}>
         <div className="max-w-5xl mx-auto px-6 mb-10">
           <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-            {CATEGORIES.map((c) => (
+            {dynamicCategories.map((c) => (
               <Link
                 key={c}
                 to="/shop"
@@ -211,7 +195,7 @@ function ShopPage() {
                 className="category-chip"
                 data-active={c === category}
               >
-                {CATEGORY_LABEL[c]}
+                {categoryLabel(c)}
               </Link>
             ))}
           </div>

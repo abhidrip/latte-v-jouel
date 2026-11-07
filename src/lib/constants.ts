@@ -29,7 +29,7 @@ export const WHATSAPP_URL = {
   review: `https://wa.me/${WHATSAPP.phone}?text=${encodeURIComponent(WHATSAPP.reviewCTA)}`,
 };
 
-export const CATEGORIES = ["all", "rings", "cuffs", "bangles", "bracelets", "pendants"] as const;
+export const CATEGORIES = ["all", "rings", "cuffs", "bangles", "bracelets", "pendants", "earrings", "necklaces", "anklets", "sets"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
 export const CATEGORY_LABEL: Record<Category, string> = {
@@ -39,4 +39,8 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   bangles: "Bangles",
   bracelets: "Bracelets",
   pendants: "Pendants",
+  earrings: "Earrings",
+  necklaces: "Necklaces",
+  anklets: "Anklets",
+  sets: "Sets",
 };
