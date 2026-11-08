@@ -2,11 +2,26 @@
 // when h3 has already swallowed the throw into a generic 500 Response.
 
 let lastCapturedError: { error: unknown; at: number } | undefined;
-const TTL_MS = 15_000;
+const TTL_MS = 30_000;
 
 function record(error: unknown) {
-  lastCapturedError = { error, at: Date.now() };
+  if (!lastCapturedError) {
+    lastCapturedError = { error, at: Date.now() };
+  }
 }
+
+// Intercept console.error because h3 calls console.error(error) on unhandled throws
+const origConsoleError = console.error;
+console.error = (...args: unknown[]) => {
+  for (const arg of args) {
+    if (arg instanceof Error) {
+      record(arg);
+    } else if (typeof arg === "string" && arg.includes("Error")) {
+      record(new Error(arg));
+    }
+  }
+  origConsoleError.apply(console, args);
+};
 
 if (typeof globalThis.addEventListener === "function") {
   globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
