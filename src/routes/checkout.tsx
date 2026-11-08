@@ -243,7 +243,7 @@ function CheckoutPage() {
       if (!res.ok || !rzpData.order_id) throw new Error(rzpData.error ?? "Payment setup failed. Please try again.");
 
       // Open Razorpay modal
-      const keyIdToUse = rzpData.key_id || (import.meta.env.VITE_RAZORPAY_KEY_ID as string) || "rzp_live_TwZdmzgdIbx55r";
+      const keyIdToUse = rzpData.key_id || "rzp_live_TwZdmzgdIbx55r";
       const logoUrl = typeof window !== "undefined"
         ? `${window.location.origin}/lattev_transparent.webp`
         : "https://lattevjouel.com/lattev_transparent.webp";
