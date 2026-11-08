@@ -66,6 +66,8 @@ export function categoryTagline(slug: string): string {
 export function useCategories() {
   return useQuery<string[]>({
     queryKey: ['categories'],
+    initialData: ['all', 'earrings'],
+    initialDataUpdatedAt: 0, // Treats initialData as stale so it revalidates from Supabase on mount
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
@@ -73,7 +75,7 @@ export function useCategories() {
         .eq('sold', false);
       if (error) {
         console.error('Error fetching categories:', error);
-        return ['all'];
+        return ['all', 'earrings'];
       }
       const unique = Array.from(
         new Set((data ?? []).map((r: { category: string }) => (r.category || '').toLowerCase().trim()).filter(Boolean))
