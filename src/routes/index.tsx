@@ -481,33 +481,42 @@ function Index() {
   const categorySlugs = dynamicCategories.filter((c) => c !== "all");
 
   // Belt-and-suspenders video play strategy:
-  // 1. `autoPlay` attribute handles desktop browsers automatically.
-  // 2. This effect handles iOS Safari, which ignores `autoPlay` unless play()
-  //    is called imperatively from inside a user-gesture chain (the loading
-  //    screen tap provides that window).
+  // Ensures video autoplays silently without any play button prompt on mobile (iOS/Android)
   useEffect(() => {
     const video = heroVideoRef.current;
     if (!video) return;
 
-    // Already playing (autoPlay worked) — nothing to do
-    if (!video.paused) return;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
 
-    const doPlay = () => {
-      video.play().catch(() => {
-        // Last resort: retry on first touch/click
-        const retry = () => {
-          video.play().catch(() => { });
-        };
-        document.addEventListener('touchstart', retry, { once: true, capture: true });
-        document.addEventListener('click', retry, { once: true, capture: true });
-      });
+    const tryPlay = () => {
+      const p = video.play();
+      if (p !== undefined) {
+        p.catch(() => {
+          // If browser policy delays autoplay (e.g. low-power mode),
+          // automatically unlock on the user's first touch/scroll anywhere without displaying a play button
+          const unlock = () => {
+            if (video) {
+              video.muted = true;
+              video.play().catch(() => {});
+            }
+          };
+          window.addEventListener('touchstart', unlock, { once: true, passive: true });
+          window.addEventListener('scroll', unlock, { once: true, passive: true });
+          window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+        });
+      }
     };
 
     if (video.readyState >= 2) {
-      doPlay();
+      tryPlay();
     } else {
+      video.addEventListener('loadedmetadata', tryPlay, { once: true });
+      video.addEventListener('canplay', tryPlay, { once: true });
       video.load();
-      video.addEventListener('canplay', doPlay, { once: true });
     }
   }, [isAppReady]);
 
@@ -531,7 +540,7 @@ function Index() {
       const lenis = new Lenis({ duration: 1.2, smoothWheel: true });
       const lenisTickerCb = (time: number) => lenis.raf(time * 1000);
       gsap.ticker.add(lenisTickerCb);
-      gsap.ticker.lagSmoothing(0); // prevent GSAP catching up after tab sleep
+      gsap.ticker.lagSmoothing(500, 33);
       lenis.on('scroll', ScrollTrigger.update);
 
       // Word reveals — skip on mobile to cut ScrollTrigger count by ~60%
@@ -573,7 +582,7 @@ function Index() {
           trigger: showcaseRef.current,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: true,
+          scrub: isMobile ? 0.45 : true,
           onUpdate: (self) => {
             (window as any).__lattevShowcaseScroll = self.progress;
             const idx = Math.min(panels.length - 1, Math.floor(self.progress * panels.length * 0.999));
@@ -787,14 +796,24 @@ function Index() {
       {/* Hero */}
       <section ref={heroRef} style={{ position: "relative", height: "100vh", minHeight: 600, overflow: "hidden", background: "var(--background)" }}>
         <video
-          ref={heroVideoRef}
+          ref={(el) => {
+            heroVideoRef.current = el;
+            if (el) {
+              el.muted = true;
+              el.defaultMuted = true;
+              el.playsInline = true;
+              el.setAttribute('playsinline', '');
+              el.setAttribute('webkit-playsinline', '');
+            }
+          }}
           src={content?.hero_video_url || heroVideoAsset.url}
           autoPlay
           muted
           loop
           playsInline
+          // @ts-ignore
+          webkit-playsinline="true"
           preload="auto"
-          poster="/hero-poster.svg"
           disablePictureInPicture
           // @ts-ignore
           x-webkit-airplay="deny"
@@ -854,7 +873,7 @@ function Index() {
         ref={showcaseRef}
         style={{ position: "relative", height: "200vh", background: "#E8B98A", borderBottom: "1px solid rgba(107,115,38,0.2)" }}
       >
-        <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden" }}>
+        <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden", willChange: "transform" }}>
           <Scene3D variant="showcase" active={isAppReady} />
           {/* vignette to keep text readable */}
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 35%, rgba(240,213,180,0.85) 90%)", pointerEvents: "none" }} />

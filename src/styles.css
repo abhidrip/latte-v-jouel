@@ -1524,6 +1524,19 @@ body {
   filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.35));
 }
 
+/* Suppress native video play button overlays on iOS / WebKit */
+video::-webkit-media-controls {
+  display: none !important;
+}
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+video::-webkit-media-controls-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
 /* Showcase scroll-driven panels */
 .showcase-panel {
   position: absolute;
@@ -1536,13 +1549,14 @@ body {
   padding: 0 1.5rem;
   pointer-events: none;
   opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  transform: translate3d(0, 30px, 0);
+  will-change: transform, opacity;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .showcase-panel.is-active {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
 }
 
 /* Showcase right-side scroll progress indicator */

@@ -16,15 +16,16 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     // ── Renderer ──────────────────────────────────────────────────────
-    // Mobile: drop DPR to 1, disable antialias, powerPreference stays high-performance
+    // Mobile: drop DPR to 1, disable antialias, avoid post-processing tone mapping
     const dpr = isMobile ? Math.min(window.devicePixelRatio, 1) : Math.min(window.devicePixelRatio, 2);
     const renderer = new THREE.WebGLRenderer({
       antialias: !isMobile,   // AA is expensive on mobile GPUs
       alpha: true,
       powerPreference: "high-performance",
+      precision: isMobile ? "mediump" : "highp",
     });
     renderer.setPixelRatio(dpr);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMapping = isMobile ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
@@ -35,18 +36,20 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     camera.position.set(0, 0, variant === "hero" ? 6 : 4.5);
 
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    let pmrem: THREE.PMREMGenerator | null = null;
+    if (!isMobile) {
+      pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    }
 
     // ── Material ──────────────────────────────────────────────────────
-    // Mobile: use MeshStandardMaterial (no clearcoat) — ~40% cheaper on GPU
+    // Mobile: use lightweight MeshStandardMaterial with high metalness & smooth roughness
     const goldColor = new THREE.Color("#C9A96E");
     const goldMaterial = isMobile
       ? new THREE.MeshStandardMaterial({
           color: goldColor,
-          metalness: 1,
+          metalness: 0.95,
           roughness: 0.22,
-          envMapIntensity: 1.2,
         })
       : new THREE.MeshPhysicalMaterial({
           color: goldColor,
@@ -58,13 +61,13 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
         });
 
     // ── Geometry ──────────────────────────────────────────────────────
-    // Mobile: halve segment counts — imperceptible difference, big GPU win
+    // Mobile: optimize segment counts (~85% fewer vertices) for 60fps mobile GPU rendering
     const meshes: THREE.Mesh[] = [];
 
     if (variant === "hero") {
-      const segments = isMobile ? 120 : 260;
+      const segments = isMobile ? 64 : 260;
       const knot = new THREE.Mesh(
-        new THREE.TorusKnotGeometry(1.4, 0.18, segments, 16, 2, 3),
+        new THREE.TorusKnotGeometry(1.4, 0.18, segments, isMobile ? 12 : 16, 2, 3),
         goldMaterial
       );
       scene.add(knot);
@@ -74,7 +77,7 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
       scene.add(ringGroup);
 
       const band = new THREE.Mesh(
-        new THREE.TorusGeometry(1.15, 0.085, isMobile ? 32 : 48, isMobile ? 160 : 280),
+        new THREE.TorusGeometry(1.15, 0.085, isMobile ? 16 : 48, isMobile ? 72 : 280),
         goldMaterial
       );
       band.rotation.x = Math.PI / 2.4;
@@ -82,8 +85,8 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
       meshes.push(band);
 
       const innerBand = new THREE.Mesh(
-        new THREE.TorusGeometry(1.05, 0.025, isMobile ? 24 : 32, isMobile ? 120 : 220),
-        new THREE.MeshStandardMaterial({ color: new THREE.Color("#8a6f3d"), metalness: 1, roughness: 0.35 })
+        new THREE.TorusGeometry(1.05, 0.025, isMobile ? 12 : 32, isMobile ? 48 : 220),
+        new THREE.MeshStandardMaterial({ color: new THREE.Color("#8a6f3d"), metalness: 0.95, roughness: 0.35 })
       );
       innerBand.rotation.x = Math.PI / 2.4;
       ringGroup.add(innerBand);
@@ -93,16 +96,30 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
     }
 
     // ── Lights ────────────────────────────────────────────────────────
-    const key = new THREE.PointLight(0xfff1d0, 30, 20, 2);
-    key.position.set(4, 3, 5);
-    scene.add(key);
-    const fill = new THREE.PointLight(0xc9a96e, 20, 20, 2);
-    fill.position.set(-5, -2, 3);
-    scene.add(fill);
-    const rim = new THREE.PointLight(0xffffff, 15, 18, 2);
-    rim.position.set(0, 4, -4);
-    scene.add(rim);
-    scene.add(new THREE.AmbientLight(0x1a1a1a, 1));
+    // Mobile: use DirectionalLights (fast constant dot-product) instead of 3 quadratic point lights
+    if (isMobile) {
+      const dirLight1 = new THREE.DirectionalLight(0xfff5dd, 2.4);
+      dirLight1.position.set(4, 3, 5);
+      scene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0xc9a96e, 1.6);
+      dirLight2.position.set(-4, -2, 2);
+      scene.add(dirLight2);
+
+      const ambLight = new THREE.AmbientLight(0xfdf7eb, 1.4);
+      scene.add(ambLight);
+    } else {
+      const key = new THREE.PointLight(0xfff1d0, 30, 20, 2);
+      key.position.set(4, 3, 5);
+      scene.add(key);
+      const fill = new THREE.PointLight(0xc9a96e, 20, 20, 2);
+      fill.position.set(-5, -2, 3);
+      scene.add(fill);
+      const rim = new THREE.PointLight(0xffffff, 15, 18, 2);
+      rim.position.set(0, 4, -4);
+      scene.add(rim);
+      scene.add(new THREE.AmbientLight(0x1a1a1a, 1));
+    }
 
     // ── Resize ────────────────────────────────────────────────────────
     const resize = () => {
@@ -129,21 +146,28 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
       window.addEventListener("mousemove", onMove);
     }
 
-    // ── Animation loop ────────────────────────────────────────────────
-    // Key fix: only call requestAnimationFrame again when rendering,
-    // and STOP the loop entirely (cancelAnimationFrame) when off-screen.
+    // ── Animation loop with smooth scroll lerp ────────────────────────
     let raf = 0;
     let isVisible = false;
+    let smoothScroll = (window as any).__lattevShowcaseScroll ?? 0;
+    let lastRenderTime = 0;
+    const mobileFrameInterval = 1000 / 55; // Cap mobile rendering at ~55fps to prevent thermal throttling
 
     const io = new IntersectionObserver(([e]) => { isVisible = e.isIntersecting; }, { threshold: 0 });
     io.observe(mount);
 
     const clock = new THREE.Clock();
-    const animate = () => {
+    const animate = (timestamp: number) => {
       raf = requestAnimationFrame(animate);
 
       // Skip render work entirely if not visible or not active
       if (!isVisible || !activeRef.current || document.hidden) return;
+
+      // Frame interval throttle on mobile
+      if (isMobile && timestamp - lastRenderTime < mobileFrameInterval) {
+        return;
+      }
+      lastRenderTime = timestamp;
 
       const t = clock.getElapsedTime();
       current.x += (target.x - current.x) * 0.05;
@@ -154,7 +178,11 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
         k.rotation.x = t * 0.25 + current.y * 0.3;
         k.rotation.y = t * 0.35 + current.x * 0.4;
       } else {
-        const p = (window as any).__lattevShowcaseScroll ?? 0;
+        const rawP = (window as any).__lattevShowcaseScroll ?? 0;
+        // Exponential smoothing (lerp) ensures silky glide even during aggressive touch scrolling
+        smoothScroll += (rawP - smoothScroll) * (isMobile ? 0.09 : 0.08);
+        const p = smoothScroll;
+
         const group: THREE.Group = (meshes as any).__ringGroup;
         if (group) {
           const phase = p;
@@ -174,7 +202,7 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
 
       renderer.render(scene, camera);
     };
-    animate();
+    raf = requestAnimationFrame(animate);
 
     return () => {
       cancelAnimationFrame(raf);
@@ -187,7 +215,7 @@ export function Scene3D({ variant = "hero", className, active = true }: { varian
         const mat = (m as any).material;
         if (mat) Array.isArray(mat) ? mat.forEach((x) => x.dispose()) : mat.dispose();
       });
-      pmrem.dispose();
+      if (pmrem) pmrem.dispose();
       renderer.dispose();
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
     };
