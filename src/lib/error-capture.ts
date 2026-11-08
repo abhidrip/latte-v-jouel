@@ -2,7 +2,7 @@
 // when h3 has already swallowed the throw into a generic 500 Response.
 
 let lastCapturedError: { error: unknown; at: number } | undefined;
-const TTL_MS = 5_000;
+const TTL_MS = 15_000;
 
 function record(error: unknown) {
   lastCapturedError = { error, at: Date.now() };
@@ -13,6 +13,11 @@ if (typeof globalThis.addEventListener === "function") {
   globalThis.addEventListener("unhandledrejection", (event) =>
     record((event as PromiseRejectionEvent).reason),
   );
+}
+
+if (typeof process !== "undefined" && typeof process.on === "function") {
+  process.on("uncaughtException", (error) => record(error));
+  process.on("unhandledRejection", (reason) => record(reason));
 }
 
 export function consumeLastCapturedError(): unknown {
