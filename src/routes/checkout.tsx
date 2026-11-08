@@ -204,8 +204,8 @@ function CheckoutPage() {
 
   // ── Send email notification (fire-and-forget) ──
   const notifyOrder = (orderId: string) => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+    const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) || "https://funbtudlvyvxweduqzrm.supabase.co";
+    const supabaseKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || "sb_publishable_pFNBEndgp55azbQQ1Lkbyw_r8QcA1LE";
     fetch(`${supabaseUrl}/functions/v1/send-order-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` },
@@ -232,8 +232,8 @@ function CheckoutPage() {
       if (!loaded) throw new Error("Could not load payment gateway. Check your internet connection.");
 
       // Create order via Supabase Edge Function
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+      const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) || "https://funbtudlvyvxweduqzrm.supabase.co";
+      const supabaseKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || "sb_publishable_pFNBEndgp55azbQQ1Lkbyw_r8QcA1LE";
       const res = await fetch(`${supabaseUrl}/functions/v1/create-razorpay-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` },

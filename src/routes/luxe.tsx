@@ -12,7 +12,7 @@ export const Route = createFileRoute("/luxe")({
   head: () => ({
     meta: [
       { title: "Lattev Luxe - The Luxury Edit" },
-      { name: "description", content: "Lattev Luxe: extraordinary high-jewellery pieces, handcrafted in India." },
+      { name: "description", content: "Lattev Luxe: extraordinary high-jewellery pieces, curated in India." },
       { property: "og:title", content: "Lattev Luxe - The Luxury Edit" },
       { property: "og:description", content: "Extraordinary pieces for extraordinary moments." },
     ],
@@ -44,7 +44,7 @@ function LuxeNavbar() {
             <div className="luxe-mobile-links">
               <Link to="/luxe" onClick={() => setMenuOpen(false)}>Luxe Collection</Link>
               <Link to="/shop" search={{ category: "all" }} onClick={() => setMenuOpen(false)}>All Pieces</Link>
-              <Link to="/" onClick={() => setMenuOpen(false)}>Maison</Link>
+              <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
               <a href={WHATSAPP_URL.general} target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>Concierge</a>
               <Link to="/wishlist" onClick={() => setMenuOpen(false)}>Wishlist</Link>
               <Link to="/cart" onClick={() => setMenuOpen(false)}>Cart</Link>
@@ -60,7 +60,7 @@ function LuxeNavbar() {
             <Menu size={22} />
           </button>
           <div className="luxe-nav__left">
-            <Link to="/" className="luxe-nav__link">← Maison</Link>
+            <Link to="/" className="luxe-nav__link">← Home</Link>
             <Link to="/shop" search={{ category: "all" }} className="luxe-nav__link">Collection</Link>
           </div>
           <Link to="/luxe" className="luxe-nav__wordmark">
@@ -122,7 +122,7 @@ function LuxePage() {
       <LuxeNavbar />
 
       <header className="luxe-shop-header">
-        <div className="luxe-kicker">Maison Selection</div>
+        <div className="luxe-kicker">Home Edit</div>
         <h1 className="luxe-shop-headline">
           The <em>Luxury</em> Edit
         </h1>
@@ -142,7 +142,7 @@ function LuxePage() {
           ) : pieces.length === 0 ? (
             <div className="luxe-empty-state">
               <p className="luxe-empty-state__text">The Luxury Edit is being curated.</p>
-              <p className="luxe-empty-state__sub">Our pieces are individually selected for extraordinary craftsmanship.</p>
+              <p className="luxe-empty-state__sub">Our pieces are individually selected for extraordinary quality.</p>
               <a href={WHATSAPP_URL.general} target="_blank" rel="noopener noreferrer" className="luxe-btn luxe-btn--gold" style={{ marginTop: "2rem", display: "inline-block" }}>
                 Contact Concierge
               </a>
@@ -179,7 +179,7 @@ function LuxePage() {
             <p className="luxe-footer__tagline">Fine contemporary jewellery · Mumbai</p>
           </div>
           <div className="luxe-footer__links">
-            <Link to="/" className="luxe-footer__link">Back to Maison</Link>
+            <Link to="/" className="luxe-footer__link">Back to Home</Link>
             <Link to="/shop" search={{ category: "all" }} className="luxe-footer__link">Full Collection</Link>
             <a href="https://instagram.com/lattevjouel" target="_blank" rel="noopener noreferrer" className="luxe-footer__link">@lattevjouel</a>
             <a href={WHATSAPP_URL.general} target="_blank" rel="noopener noreferrer" className="luxe-footer__link">Concierge</a>

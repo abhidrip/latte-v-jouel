@@ -130,7 +130,7 @@ function CartPage() {
             opacity: 0.78,
           }}
         >
-          Maison Selection
+          Home Selection
         </div>
         <h1
           className="font-display"

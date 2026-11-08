@@ -46,8 +46,8 @@ export function categoryTagline(slug: string): string {
 export function useCategories() {
   return useQuery<string[]>({
     queryKey: ['categories'],
+    initialData: ['all', 'earrings'],
     queryFn: async () => {
-      if (!import.meta.env.VITE_SUPABASE_URL) return ['all'];
       const { data, error } = await supabase
         .from('products')
         .select('category')

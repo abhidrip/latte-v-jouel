@@ -50,58 +50,117 @@ body {
   contain-intrinsic-size: 0 600px;
 }
 
-/* ── Mobile performance overrides ───────────────────────────────────────────
-   Disable expensive CSS effects on small screens to reclaim GPU headroom.    */
+/* ── Mobile performance & layout overrides ──────────────────────────────────
+   2 tiles per screen, zero lag, consistent brand colors, no GPU thrashing.   */
 @media (max-width: 768px) {
-  /* backdrop-filter is extremely expensive on mobile — disable it            */
+  /* Disable expensive GPU backdrop-filter on mobile to eliminate lag */
+  * {
+    -webkit-backdrop-filter: none !important;
+  }
   .fp-card-info,
   .also-featured-card,
-  .fp-card-hover-cta {
+  .fp-card-hover-cta,
+  .luxury-card-info {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
 
-  /* Reduce transition durations on mobile for snappier feel                  */
+  /* Reduce transition durations on mobile for snappier feel */
   .fp-card,
   .also-featured-card,
   .fp-card-img,
-  .also-featured-photo {
-    transition-duration: 0.25s !important;
+  .also-featured-photo,
+  .luxury-card,
+  .luxury-card-img {
+    transition-duration: 0.2s !important;
   }
 
-  /* Disable hover transforms on mobile — they fire on tap and cause jank     */
+  /* Disable hover transforms on mobile (prevents tap jank) */
   .fp-card:hover,
-  .luxury-card:hover {
+  .luxury-card:hover,
+  .also-featured-card:hover {
     transform: none !important;
   }
 
-  /* Disable image scale on hover (mobile taps trigger hover state briefly)   */
+  /* Disable image scale on hover */
   .fp-card:hover .fp-card-img,
   .luxury-card:hover .luxury-card-img,
   .also-featured-photo-wrap:hover .also-featured-photo {
     transform: none !important;
   }
 
-  /* Disable luxury gradient background animation — cheaper solid bg on mobile */
-  .luxury-section {
-    background: #E0A97E !important;
+  /* Consistent brand background color across all sections — fixes color shade mismatch */
+  .luxury-section,
+  .featured-pieces-section,
+  .also-featured-section {
+    background: #E8B98A !important;
   }
 
-  /* Remove will-change on mobile — reduces compositor layer count             */
+  /* Remove will-change on mobile — reduces compositor memory footprint */
   .community-reels-grid video,
   .fp-card-img,
-  .also-featured-photo {
+  .also-featured-photo,
+  .luxury-card-img {
     will-change: auto !important;
   }
 
-  /* Reduce luxury card width for snappier swipe feel                         */
-  .luxury-card {
-    flex: 0 0 78vw !important;
+  /* Two tiles at one time for both Featured Pieces and Luxury Edit sliders */
+  .fp-slider,
+  .luxury-slider {
+    gap: 0.75rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
 
-  /* Also-featured section: reduce padding                                    */
+  .fp-card,
+  .luxury-card {
+    flex: 0 0 calc(45vw - 4px) !important;
+    width: calc(45vw - 4px) !important;
+    max-width: 195px !important;
+    min-width: 140px !important;
+    border-radius: 12px !important;
+  }
+
+  .fp-card-info,
+  .luxury-card-info {
+    padding: 0.6rem !important;
+  }
+
+  .fp-card-name,
+  .luxury-card-name {
+    font-size: 0.88rem !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .fp-card-price,
+  .luxury-card-price {
+    font-size: 0.78rem !important;
+    margin-top: 0.2rem !important;
+  }
+
+  .fp-card-category,
+  .luxury-card-category {
+    font-size: 0.5rem !important;
+    letter-spacing: 0.15em !important;
+    margin-bottom: 0.15rem !important;
+  }
+
+  /* Clean up clutter on mobile product cards */
+  .luxury-card-material,
+  .luxury-card-cta,
+  .luxury-swipe-hint,
+  .fp-card-hover-cta,
+  .luxury-nav,
+  .fp-nav {
+    display: none !important;
+  }
+
+  /* Also-featured section: compact padding */
   .also-featured-section {
-    padding: 3.5rem 0 !important;
+    padding: 2.5rem 0 !important;
   }
 }
 
@@ -2704,10 +2763,7 @@ body {
 
 @media (max-width: 768px) {
   .luxury-section {
-    padding: 4rem 0;
-  }
-  .luxury-card {
-    flex: 0 0 85vw;
+    padding: 2.5rem 0;
   }
 }
 

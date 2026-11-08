@@ -55,7 +55,7 @@ function ProductJsonLd({ product, images }: { product: Product; images: string[]
     "@context": "https://schema.org/",
     "@type": "Product",
     name: product.name,
-    description: product.description || `${product.name} — fine handcrafted jewellery by Lattév Jouel`,
+    description: product.description || `${product.name} — fine curated jewellery by Lattév Jouel`,
     image: images.length ? images : product.img ? [product.img] : [],
     brand: { "@type": "Brand", name: "Lattév Jouel" },
     category: product.category,

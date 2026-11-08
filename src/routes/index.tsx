@@ -24,9 +24,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Lattév Jouel — Fine Contemporary Jewellery" },
-      { name: "description", content: "Lattév Jouel: fine contemporary jewellery handcrafted in India. Rings, cuffs, bangles, bracelets and pendants." },
+      { name: "description", content: "Lattév Jouel: fine contemporary jewellery curated in India. Rings, cuffs, bangles, bracelets, pendants, and earrings." },
       { property: "og:title", content: "Lattév Jouel" },
-      { property: "og:description", content: "Crafted for the bold. Made to be worn." },
+      { property: "og:description", content: "Curated for the bold. Made to be worn." },
     ],
   }),
   component: Index,
@@ -404,16 +404,6 @@ function LuxurySection({ content }: { content: Record<string, string | undefined
           <p className="luxury-subtitle">
             {content.luxury_subheading || "Extraordinary pieces for extraordinary moments"}
           </p>
-        </div>
-
-        {/* Navigation arrows */}
-        <div className="luxury-nav hidden md:flex">
-          <button onClick={() => scroll("left")} className="luxury-nav-btn" aria-label="Scroll left">
-            <ChevronLeft size={18} strokeWidth={1.5} />
-          </button>
-          <button onClick={() => scroll("right")} className="luxury-nav-btn" aria-label="Scroll right">
-            <ChevronRight size={18} strokeWidth={1.5} />
-          </button>
         </div>
 
         {/* Cards */}
@@ -1049,7 +1039,7 @@ function Index() {
       <section id="about" style={{ background: "var(--background)", color: "var(--foreground)" }}>
         <div className="grid md:grid-cols-2 gap-0 items-stretch min-h-screen">
           <div data-slide-left className="overflow-hidden relative" style={{ minHeight: "60vh" }}>
-            <img src={content?.about_image_url || boothAsset.url} alt="Lattév Jouel pop-up boutique with handcrafted jewellery displays" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={content?.about_image_url || boothAsset.url} alt="Lattév Jouel pop-up boutique with curated jewellery displays" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             <span className="about-curtain about-curtain--top" />
             <span className="about-curtain about-curtain--bottom" />
           </div>
@@ -1129,7 +1119,7 @@ function Index() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
           <div>
             <img src={logoAsset.url} alt="Lattév Jouel" style={{ height: 96, width: "auto", display: "block" }} />
-            <p className="mt-4 text-sm opacity-70 max-w-xs leading-relaxed">Fine contemporary jewellery. Handcrafted in India for the bold and the becoming.</p>
+            <p className="mt-4 text-sm opacity-70 max-w-xs leading-relaxed">Fine contemporary jewellery. Curated in India for the bold and the becoming.</p>
           </div>
           <div>
             <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.75rem", marginBottom: "1.25rem" }}>Navigate</div>
@@ -1164,7 +1154,7 @@ function Index() {
           <Link to="/policies/terms" style={{ color: "var(--color-umber)", textDecoration: "none" }}>Terms & FAQs</Link>
         </div>
         <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-[rgba(107,115,38,0.15)] text-center text-[0.65rem] tracking-wider-luxe uppercase opacity-60">
-          © {new Date().getFullYear()} Lattév Jouel. All pieces handcrafted in India.
+          © {new Date().getFullYear()} Lattév Jouel. All pieces curated in India.
         </div>
       </footer>
     </div>

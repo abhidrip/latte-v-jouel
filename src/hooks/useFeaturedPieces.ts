@@ -16,13 +16,13 @@ export function useFeaturedPieces() {
   return useQuery<FeaturedPiece[]>({
     queryKey: ['featured_pieces'],
     queryFn: async () => {
-      if (!import.meta.env.VITE_SUPABASE_URL) return [];
-
+      // Products ordered so featured=true comes first, but all unsold pieces are included.
+      // That way the homepage slider is never empty when products are added via the admin app!
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, img, price, link, category')
-        .eq('featured', true)
+        .select('id, name, img, price, link, category, featured')
         .eq('sold', false)
+        .order('featured', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (error) {

@@ -30,9 +30,9 @@ export const Route = createFileRoute("/shop")({
     return {
       meta: [
         { title: `${label} — Lattév Jouel` },
-        { name: "description", content: `Shop ${label.toLowerCase()} from Lattév Jouel — handcrafted in India.` },
+        { name: "description", content: `Shop ${label.toLowerCase()} from Lattév Jouel — curated in India.` },
         { property: "og:title", content: `${label} — Lattév Jouel` },
-        { property: "og:description", content: "Each piece, a story. Handcrafted in India." },
+        { property: "og:description", content: "Each piece, a story. Curated in India." },
       ],
     };
   },
@@ -65,7 +65,6 @@ function ShopPage() {
   const { data: allProducts = [], isLoading, isError } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      if (!import.meta.env.VITE_SUPABASE_URL) return [];
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: true });
       if (error) {
         console.error("Supabase fetch error:", error);
@@ -254,7 +253,7 @@ function ShopPage() {
         <div className="max-w-5xl mx-auto" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "2rem", textAlign: "center" }}>
           <div>
             <img src={logoAsset.url} alt="Lattév Jouel" style={{ height: 64, width: "auto", margin: "0 auto", display: "block" }} />
-            <p className="mt-3 text-sm opacity-70" style={{ maxWidth: 200, margin: "0.75rem auto 0" }}>Fine contemporary jewellery. Handcrafted in India.</p>
+            <p className="mt-3 text-sm opacity-70" style={{ maxWidth: 200, margin: "0.75rem auto 0" }}>Fine contemporary jewellery. Curated in India.</p>
           </div>
           <div>
             <div className="uppercase tracking-luxe font-semibold" style={{ color: "var(--color-gold)", fontSize: "0.72rem", marginBottom: "1rem" }}>Navigate</div>
@@ -279,7 +278,7 @@ function ShopPage() {
           <Link to="/policies/returns" style={{ color: "inherit", textDecoration: "none" }}>Returns</Link>
           <Link to="/policies/terms" style={{ color: "inherit", textDecoration: "none" }}>Terms & FAQs</Link>
         </div>
-        <div className="mt-6 text-[0.65rem] tracking-wider-luxe uppercase opacity-60" style={{ textAlign: "center" }}>© {new Date().getFullYear()} Lattév Jouel. All pieces handcrafted in India.</div>
+        <div className="mt-6 text-[0.65rem] tracking-wider-luxe uppercase opacity-60" style={{ textAlign: "center" }}>© {new Date().getFullYear()} Lattév Jouel. All pieces curated in India.</div>
       </footer>
     </div>
   );
